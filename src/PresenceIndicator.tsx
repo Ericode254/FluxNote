@@ -1,0 +1,32 @@
+import { useQuery } from "convex/react";
+import { api } from "../convex/_generated/api";
+import usePresence from "@convex-dev/presence/react";
+import FacePile from "@convex-dev/presence/facepile";
+import { Id } from "../convex/_generated/dataModel";
+
+interface PresenceIndicatorProps {
+  roomId: Id<"documents">;
+}
+
+export function PresenceIndicator({ roomId }: PresenceIndicatorProps) {
+  const userId = useQuery(api.presence.getUserId);
+
+  if (!userId) return null;
+
+  return <PresenceInner roomId={roomId} userId={userId} />;
+}
+
+function PresenceInner({ roomId, userId }: { roomId: string; userId: string }) {
+  const presenceState = usePresence(api.presence, roomId, userId);
+
+  if (!presenceState || presenceState.length <= 1) return null;
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-[#555555] dark:text-[#AAAAAA] hidden sm:block">
+        {presenceState.length} editing
+      </span>
+      <FacePile presenceState={presenceState} />
+    </div>
+  );
+}
