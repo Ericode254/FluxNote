@@ -31,6 +31,25 @@ export const heartbeat = mutation({
   },
 });
 
+const COLORS = [
+  "#FF5F5F", // Red
+  "#4F91FF", // Blue
+  "#32D74B", // Green
+  "#FF9500", // Orange
+  "#AF52DE", // Purple
+  "#FFCC00", // Yellow
+  "#5AC8FA", // Sky Blue
+  "#FF2D55", // Pink
+];
+
+function getColorForUser(userId: string) {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return COLORS[Math.abs(hash) % COLORS.length];
+}
+
 export const list = query({
   args: { roomToken: v.string() },
   handler: async (ctx, { roomToken }) => {
@@ -51,6 +70,7 @@ export const list = query({
           ...entry,
           name: displayName,
           image: user?.image,
+          color: getColorForUser(entry.userId),
         };
       })
     );

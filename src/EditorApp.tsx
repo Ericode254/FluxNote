@@ -20,21 +20,27 @@ export function EditorApp({ darkMode, onToggleDark }: EditorAppProps) {
   const myProfile = useQuery(api.userProfiles.getMyProfile);
   const [showNameModal, setShowNameModal] = useState(false);
 
+  const getByInviteCode = useQuery(api.documents.getByInviteCode, { 
+    inviteCode: new URLSearchParams(window.location.search).get("invite") ?? "" 
+  });
+
   // Check URL for invite code
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const invite = params.get("invite");
-    if (invite) {
-      // Will be handled by InviteHandler
+    if (getByInviteCode) {
+      setSelectedDocId(getByInviteCode._id);
+      // Clean up URL without reload
+      const url = new URL(window.location.href);
+      url.searchParams.delete("invite");
+      window.history.replaceState({}, document.title, url.pathname);
     }
-  }, []);
+  }, [getByInviteCode]);
 
   // Show name modal if no display name set
   useEffect(() => {
-    if (myProfile === null) {
+    if (myProfile === null && !showNameModal) {
       setShowNameModal(true);
     }
-  }, [myProfile]);
+  }, [myProfile, showNameModal]);
 
   const handleCreateDoc = async () => {
     const id = await createDoc({ title: "Untitled Document" });

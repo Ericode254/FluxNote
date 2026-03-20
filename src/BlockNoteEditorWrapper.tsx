@@ -12,8 +12,30 @@ interface BlockNoteEditorWrapperProps {
   displayName: string;
 }
 
+const COLORS = [
+  "#FF5F5F", // Red
+  "#4F91FF", // Blue
+  "#32D74B", // Green
+  "#FF9500", // Orange
+  "#AF52DE", // Purple
+  "#FFCC00", // Yellow
+  "#5AC8FA", // Sky Blue
+  "#FF2D55", // Pink
+];
+
+function getColorForUser(userId: string) {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return COLORS[Math.abs(hash) % COLORS.length];
+}
+
 export function BlockNoteEditorWrapper({ docId, darkMode, displayName }: BlockNoteEditorWrapperProps) {
-  const sync = useBlockNoteSync<BlockNoteEditor>(api.documents, docId as string);
+  const sync = useBlockNoteSync<BlockNoteEditor>(api.documents, docId as string, {
+    name: displayName,
+    color: getColorForUser(displayName),
+  });
 
   if (sync.isLoading) {
     return (
