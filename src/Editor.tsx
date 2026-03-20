@@ -6,6 +6,7 @@ import { PresenceIndicator } from "./PresenceIndicator";
 import { InviteButton } from "./InviteButton";
 import { toast } from "sonner";
 import { BlockNoteEditorWrapper } from "./BlockNoteEditorWrapper";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 interface EditorProps {
   docId: Id<"documents">;
@@ -15,6 +16,7 @@ interface EditorProps {
 export function Editor({ docId, darkMode }: EditorProps) {
   const doc = useQuery(api.documents.get, { id: docId });
   const updateTitle = useMutation(api.documents.updateTitle);
+  const resetDocument = useMutation(api.documents.resetDocument);
   const { isAuthenticated } = useConvexAuth();
   const myProfile = useQuery(api.userProfiles.getMyProfile);
 
@@ -37,6 +39,15 @@ export function Editor({ docId, darkMode }: EditorProps) {
       await updateTitle({ id: docId, title });
     } catch {
       toast.error("Failed to update title");
+    }
+  };
+
+  const handleReset = async () => {
+    try {
+      await resetDocument({ id: docId });
+      toast.success("Document reset. Structure fixed.");
+    } catch {
+      toast.error("Failed to reset document");
     }
   };
 
@@ -101,13 +112,18 @@ export function Editor({ docId, darkMode }: EditorProps) {
       </div>
 
       {/* BlockNote Editor */}
-      <div className="flex-1 overflow-hidden">
-        <BlockNoteEditorWrapper
+      <div className="flex-1 overflow-hidden relative">
+        <ErrorBoundary 
           key={docId}
-          docId={docId}
-          darkMode={darkMode}
-          displayName={displayName}
-        />
+          onReset={handleReset}
+        >
+          <BlockNoteEditorWrapper
+            key={docId}
+            docId={docId}
+            darkMode={darkMode}
+            displayName={displayName}
+          />
+        </ErrorBoundary>
       </div>
     </div>
   );

@@ -55,17 +55,7 @@ export const create = mutation({
     // Initialize the prosemirror document
     await prosemirrorSync.create(ctx, id, {
       type: "doc",
-      content: [
-        {
-          type: "heading",
-          attrs: { level: 1 },
-          content: [{ type: "text", text: args.title }],
-        },
-        {
-          type: "paragraph",
-          content: [{ type: "text", text: "Start writing here..." }],
-        },
-      ],
+      content: [],
     });
     return id;
   },
@@ -75,6 +65,17 @@ export const updateTitle = mutation({
   args: { id: v.id("documents"), title: v.string() },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, { title: args.title });
+  },
+});
+
+export const resetDocument = mutation({
+  args: { id: v.id("documents") },
+  handler: async (ctx, args) => {
+    // Clear and re-initialize the prosemirror document
+    await prosemirrorSync.create(ctx, args.id, {
+      type: "doc",
+      content: [],
+    });
   },
 });
 
