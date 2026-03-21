@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useConvexAuth } from "convex/react";
+
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import { Sidebar } from "./Sidebar";
@@ -13,27 +14,37 @@ interface EditorAppProps {
 }
 
 export function EditorApp({ darkMode, onToggleDark }: EditorAppProps) {
+  const { isAuthenticated } = useConvexAuth();
   const [selectedDocId, setSelectedDocId] = useState<Id<"documents"> | null>(null);
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const documents = useQuery(api.documents.list) ?? [];
   const createDoc = useMutation(api.documents.create);
   const myProfile = useQuery(api.userProfiles.getMyProfile);
   const [showNameModal, setShowNameModal] = useState(false);
 
-  const getByInviteCode = useQuery(api.documents.getByInviteCode, { 
-    inviteCode: new URLSearchParams(window.location.search).get("invite") ?? "" 
-  });
+  const joinByInviteCode = useMutation(api.documents.joinByInviteCode);
 
   // Check URL for invite code
   useEffect(() => {
-    if (getByInviteCode) {
-      setSelectedDocId(getByInviteCode._id);
-      // Clean up URL without reload
-      const url = new URL(window.location.href);
-      url.searchParams.delete("invite");
-      window.history.replaceState({}, document.title, url.pathname);
+    const inviteCode = new URLSearchParams(window.location.search).get("invite");
+    if (inviteCode && isAuthenticated) {
+      const join = async () => {
+        try {
+          const docId = await joinByInviteCode({ inviteCode });
+          setSelectedDocId(docId);
+          // Clean up URL without reload
+          const url = new URL(window.location.href);
+          url.searchParams.delete("invite");
+          window.history.replaceState({}, document.title, url.pathname + url.search);
+        } catch (e) {
+          console.error("Failed to join document:", e);
+        }
+      };
+      join();
     }
-  }, [getByInviteCode]);
+  }, [isAuthenticated, joinByInviteCode]);
+
 
   // Show name modal if no display name set
   useEffect(() => {

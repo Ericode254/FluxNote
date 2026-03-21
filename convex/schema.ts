@@ -10,12 +10,22 @@ const applicationTables = {
     // Legacy fields kept for migration compatibility
     content: v.optional(v.string()),
     lastEditedBy: v.optional(v.string()),
-  }).index("by_invite_code", ["inviteCode"]),
+  }).index("by_invite_code", ["inviteCode"])
+    .index("by_owner_id", ["ownerId"]),
+
   userProfiles: defineTable({
     userId: v.string(),
     displayName: v.string(),
   }).index("by_user_id", ["userId"]),
+  documentAccess: defineTable({
+    documentId: v.id("documents"),
+    userId: v.string(),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_document_id", ["documentId"])
+    .index("by_document_and_user", ["documentId", "userId"]),
 };
+
 
 export default defineSchema({
   ...authTables,
