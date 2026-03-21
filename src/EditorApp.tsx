@@ -8,6 +8,7 @@ import { Editor } from "./Editor";
 import { SignOutButton } from "./SignOutButton";
 import { DisplayNameModal } from "./DisplayNameModal";
 
+
 interface EditorAppProps {
   darkMode: boolean;
   onToggleDark: () => void;
@@ -74,8 +75,9 @@ export function EditorApp({ darkMode, onToggleDark }: EditorAppProps) {
             </svg>
           </button>
           <div className="flex items-center gap-2">
-            <span className="text-xl">📝</span>
-            <span className="font-bold text-lg hidden sm:block text-[#1C1C1C] dark:text-[#EAEAEA]">CollabMD</span>
+            <img src="/logo.png" alt="Flux Note" className="w-8 h-8 rounded-lg shadow-sm" />
+            <span className="font-bold text-lg hidden sm:block text-[#1C1C1C] dark:text-[#EAEAEA]">Flux Note</span>
+
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -138,6 +140,7 @@ export function EditorApp({ darkMode, onToggleDark }: EditorAppProps) {
           onClose={() => setShowNameModal(false)}
         />
       )}
+
     </div>
   );
 }
@@ -145,11 +148,10 @@ export function EditorApp({ darkMode, onToggleDark }: EditorAppProps) {
 function EmptyState({ onCreateDoc }: { onCreateDoc: () => void }) {
   return (
     <div className="h-full flex flex-col items-center justify-center gap-6 p-8">
-      <div className="w-24 h-24 rounded-2xl bg-[#4F91FF]/10 dark:bg-[#4F91FF]/20 flex items-center justify-center">
-        <svg className="w-12 h-12 text-[#4F91FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
+      <div className="w-24 h-24 rounded-2xl bg-[#4F91FF]/10 dark:bg-[#4F91FF]/20 flex items-center justify-center overflow-hidden">
+        <img src="/logo.png" alt="Flux Note" className="w-16 h-16 opacity-80" />
       </div>
+
       <div className="text-center">
         <p className="text-lg font-semibold text-[#1C1C1C] dark:text-[#EAEAEA] mb-1">No document selected</p>
         <p className="text-sm text-[#555555] dark:text-[#AAAAAA]">Select a document from the sidebar or create a new one</p>

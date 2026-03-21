@@ -11,8 +11,9 @@ export function OnboardingScreen({ darkMode, onToggleDark }: OnboardingScreenPro
       {/* Header */}
       <header className="h-16 flex justify-between items-center border-b border-[#E0E0E0] dark:border-[#3A3A4E] px-6 bg-white dark:bg-[#2A2A3B] shadow-sm">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">📝</span>
-          <h1 className="text-xl font-bold text-[#1C1C1C] dark:text-[#EAEAEA]">CollabMD</h1>
+          <img src="/logo.png" alt="Flux Note" className="w-10 h-10 rounded-xl shadow-sm" />
+
+          <h1 className="text-xl font-bold text-[#1C1C1C] dark:text-[#EAEAEA]">Flux Note</h1>
         </div>
         <button
           onClick={onToggleDark}
@@ -44,7 +45,7 @@ export function OnboardingScreen({ darkMode, onToggleDark }: OnboardingScreenPro
               <span className="text-[#4F91FF]">in real time.</span>
             </h2>
             <p className="text-[#555555] dark:text-[#AAAAAA] text-lg mb-8 leading-relaxed">
-              CollabMD is a collaborative document editor with live presence, cursor tracking, and instant sync — built for teams who think in markdown.
+              Flux Note is a collaborative document editor with live presence, cursor tracking, and instant sync — built for teams who think in markdown.
             </p>
             <div className="flex flex-wrap gap-4">
               <Feature icon="⚡" label="Real-time sync" />
