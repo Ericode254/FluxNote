@@ -83,7 +83,14 @@ body {
   }
 }
 
-/* Collaborative cursor labels */
+/* ── Collaborative cursors ─────────────────────────────────────────── */
+
+/* Base cursor element — smooth transitions for position jumps */
+.collaboration-cursor {
+  transition: opacity 0.5s ease;
+}
+
+/* Cursor label (name tag) */
 .collaboration-cursor__label {
   border-radius: 3px 3px 3px 0;
   color: #fff;
@@ -97,6 +104,21 @@ body {
   user-select: none;
   white-space: nowrap;
   pointer-events: none;
+  animation: cursor-arrive 0.3s ease-out;
+}
+
+/* Stale cursor — user inactive for 5+ seconds */
+.collaboration-cursor--stale {
+  opacity: 0.3;
+}
+.collaboration-cursor--stale .collaboration-cursor__label {
+  opacity: 0;
+}
+
+/* Subtle pulse when a cursor first appears / moves to a new position */
+@keyframes cursor-arrive {
+  0% { opacity: 0; transform: translateY(-2px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 /* Scrollbar styling */
