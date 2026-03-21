@@ -84,3 +84,15 @@ export const disconnect = mutation({
     return await presence.disconnect(ctx, sessionToken);
   },
 });
+
+export const update = mutation({
+  args: {
+    roomId: v.string(),
+    data: v.any(),
+  },
+  handler: async (ctx, { roomId, data }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return;
+    await presence.updateRoomUser(ctx, roomId, userId, data);
+  },
+});

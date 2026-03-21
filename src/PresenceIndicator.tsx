@@ -21,12 +21,18 @@ function PresenceInner({ roomId, userId }: { roomId: string; userId: string }) {
 
   if (!presenceState || presenceState.length <= 1) return null;
 
+  // Filter out internal data like cursor positions from the FacePile tooltips
+  const sanitizedPresence = presenceState.map(({ data, ...p }) => ({
+    ...p,
+    // Keep only what FacePile needs or nothing from data
+  }));
+
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-[#555555] dark:text-[#AAAAAA] hidden sm:block">
         {presenceState.length} editing
       </span>
-      <FacePile presenceState={presenceState} />
+      <FacePile presenceState={sanitizedPresence} />
     </div>
   );
 }
