@@ -10,7 +10,7 @@ import usePresence from "@convex-dev/presence/react";
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey, Selection } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface BlockNoteEditorWrapperProps {
   docId: Id<"documents">;
@@ -21,6 +21,17 @@ interface BlockNoteEditorWrapperProps {
 const COLORS = [
   "#FF5F5F", "#4F91FF", "#32D74B", "#FF9500", "#AF52DE", "#FFCC00", "#5AC8FA", "#FF2D55",
 ];
+
+interface PresenceData {
+  cursor?: {
+    pos: number;
+  };
+}
+
+const SMOOTH_TEXT_KEY = new PluginKey("smooth-text");
+const REMOTE_CURSORS_KEY = new PluginKey("remote-cursors");
+
+
 
 function getColorForUser(userId: string) {
   let hash = 0;
@@ -58,8 +69,9 @@ export function BlockNoteEditorWrapper({ docId, darkMode, displayName }: BlockNo
     const activeIds = new Set<string>();
     presence.forEach((p) => {
       activeIds.add(p.userId);
-      // @ts-ignore — update timestamp whenever we see fresh cursor data
-      if (p.data?.cursor) {
+      const data = p.data as PresenceData;
+      // Update timestamp whenever we see fresh cursor data
+      if (data?.cursor) {
         lastSeenRef.current[p.userId] = now;
       } else if (!lastSeenRef.current[p.userId]) {
         lastSeenRef.current[p.userId] = now;
@@ -78,98 +90,115 @@ export function BlockNoteEditorWrapper({ docId, darkMode, displayName }: BlockNo
       _tiptapOptions: {
         extensions: [
           Extension.create({
-            name: "remote-cursors",
+            name: "smooth-text",
             addProseMirrorPlugins() {
               return [
                 new Plugin({
-                  key: new PluginKey("remote-cursors"),
+                  key: SMOOTH_TEXT_KEY,
                   state: {
                     init() { return DecorationSet.empty; },
-                    apply(tr, set, oldState, newState) {
-                      // Map existing decorations so they "stick" to the text
-                      // — this is what makes remote cursors follow edits smoothly
-                      // without needing a fresh presence broadcast every keystroke.
-                      set = set.map(tr.mapping, newState.doc);
-
-                      if (tr.getMeta("presenceUpdate") || tr.docChanged) {
-                        const decorations: Decoration[] = [];
-                        const now = Date.now();
-
-                        presenceRef.current?.forEach((p) => {
-                          // @ts-ignore
-                          if (p.userId === userIdRef.current || !p.data?.cursor) return;
-
-                          // ── Stale cursor cleanup ───────────────────────
-                          const lastSeen = lastSeenRef.current[p.userId] ?? now;
-                          const staleness = now - lastSeen;
-
-                          // Remove cursor entirely if unseen for 10s
-                          if (staleness >= STALE_REMOVE_MS) return;
-
-                          const isStale = staleness >= STALE_FADE_MS;
-
-                          // @ts-ignore
-                          let pos = p.data.cursor.pos;
-
-                          // Prefer the mapped position during document changes to keep it fluid, 
-                          // BUT trust the Presence data if this is an explicit presence broadcast.
-                          const existing = set.find(undefined, undefined, (spec) => spec.key === p.userId);
-                          if (existing.length > 0 && !tr.getMeta("presenceUpdate")) {
-                            pos = existing[0].from;
-                          }
-
-                          if (pos < 0 || pos > newState.doc.content.size) return;
-
-                          const $pos = newState.doc.resolve(pos);
-                          if (!$pos.parent.isTextblock) {
-                            // Boundary case (e.g. between blocks) — find nearest valid text position
-                            pos = Selection.near($pos, -1).from;
-                          }
-
-                          const color = getColorForUser(p.userId);
-                          const name = p.name || "Anonymous";
-
-                          const cursorEl = document.createElement("span");
-                          cursorEl.className = "collaboration-cursor"
-                            + (isStale ? " collaboration-cursor--stale" : "");
-                          cursorEl.style.borderLeft = `2px solid ${color}`;
-                          cursorEl.style.position = "relative";
-                          cursorEl.style.pointerEvents = "none";
-                          cursorEl.style.height = "1.2em";
-                          cursorEl.style.display = "inline";
-                          cursorEl.style.verticalAlign = "text-bottom";
-                          cursorEl.style.transition = "all 0.15s ease-out";
-
-                          const labelEl = document.createElement("span");
-                          labelEl.className = "collaboration-cursor__label";
-                          labelEl.style.backgroundColor = color;
-                          labelEl.style.color = "white";
-                          labelEl.style.padding = "1px 4px";
-                          labelEl.style.borderRadius = "3px 3px 3px 0";
-                          labelEl.style.fontSize = "11px";
-                          labelEl.style.fontWeight = "600";
-                          labelEl.style.position = "absolute";
-                          labelEl.style.top = "-16px";
-                          labelEl.style.left = "-1px";
-                          labelEl.style.whiteSpace = "nowrap";
-                          labelEl.style.lineHeight = "1.2";
-                          labelEl.style.zIndex = "10";
-                          labelEl.textContent = name;
-                          cursorEl.appendChild(labelEl);
-
-                          decorations.push(Decoration.widget(pos, cursorEl, { 
-                            key: p.userId, 
-                            handleBuffer: true,
-                            side: 10 // Stays to the right of inserted text
-                          }));
+                    apply(tr, set) {
+                      set = set.map(tr.mapping, tr.doc);
+                      
+                      // Identify remote changes and mark them for animation
+                      // Remote transactions from prosemirror-sync/collab have addToHistory = false
+                      if (tr.docChanged && tr.getMeta("addToHistory") === false) {
+                        tr.steps.forEach((step, i) => {
+                          const map = tr.mapping.maps[i];
+                          map.forEach((_oldStart, _oldEnd, newStart, newEnd) => {
+                            if (newEnd > newStart) {
+                              set = set.add(tr.doc, [
+                                Decoration.inline(newStart, newEnd, {
+                                  class: "smooth-text-insertion",
+                                }),
+                              ]);
+                            }
+                          });
                         });
-                        return DecorationSet.create(newState.doc, decorations);
                       }
+
+                      // Cleanup on next interaction or manual meta
+                      if (tr.getMeta("smooth-text-cleanup")) {
+                         return DecorationSet.empty;
+                      }
+                      
                       return set;
                     },
                   },
                   props: {
                     decorations(state) { return this.getState(state); },
+                  },
+                  view(view) {
+                    return {
+                      update() {
+                        const set = SMOOTH_TEXT_KEY.getState(view.state);
+                        if (set && set.find().length > 0) {
+                          // Schedule cleanup
+                          setTimeout(() => {
+                            if (!view.isDestroyed) {
+                              view.dispatch(view.state.tr.setMeta("smooth-text-cleanup", true));
+                            }
+                          }, 1000);
+                        }
+                      }
+                    };
+                  }
+                }),
+              ];
+            }
+          }),
+
+          Extension.create({
+            name: "remote-cursors",
+            addProseMirrorPlugins() {
+              return [
+                new Plugin({
+                  key: REMOTE_CURSORS_KEY,
+                  state: {
+                    init() { return { cursors: [] as any[] }; },
+                    apply(tr, value, oldState, newState) {
+                      let { cursors } = value;
+                      // Map positions
+                      cursors = cursors.map(c => ({
+                        ...c,
+                        pos: tr.mapping.map(c.pos)
+                      }));
+
+                      if (tr.getMeta("presenceUpdate") || tr.docChanged) {
+                        const now = Date.now();
+                        const newCursors: any[] = [];
+                        
+                        presenceRef.current?.forEach((p) => {
+                          const data = p.data as PresenceData;
+                          if (p.userId === userIdRef.current || !data?.cursor) return;
+                          
+                          const lastSeen = lastSeenRef.current[p.userId] ?? now;
+                          if (now - lastSeen >= STALE_REMOVE_MS) return;
+
+                          let pos = data.cursor.pos;
+                          const existing = cursors.find((c: any) => c.userId === p.userId);
+                          if (existing && !tr.getMeta("presenceUpdate")) {
+                            pos = existing.pos;
+                          }
+
+                          if (pos < 0 || pos > newState.doc.content.size) return;
+                          const $pos = newState.doc.resolve(pos);
+                          if (!$pos.parent.isTextblock) {
+                            pos = Selection.near($pos, -1).from;
+                          }
+
+                          newCursors.push({
+                            userId: p.userId,
+                            pos,
+                            name: p.name || "Anonymous",
+                            color: getColorForUser(p.userId),
+                            isStale: now - lastSeen >= STALE_FADE_MS
+                          });
+                        });
+                        return { cursors: newCursors };
+                      }
+                      return { cursors };
+                    },
                   },
                 }),
               ];
@@ -195,11 +224,6 @@ export function BlockNoteEditorWrapper({ docId, darkMode, displayName }: BlockNo
   }, [presence, editor]);
 
   // ── Periodic stale-cursor check ────────────────────────────────────
-  // Re-dispatch every 3s so stale cursors visually fade and eventually
-  // get removed, even when no doc changes are happening.
-  // NOTE: This ONLY sets the "presenceUpdate" meta — the apply() function
-  // still prefers the mapped position from existing decorations, so this
-  // won't snap cursors back to stale positions.
   useEffect(() => {
     if (!editor?.prosemirrorView) return;
     const view = editor.prosemirrorView;
@@ -212,15 +236,6 @@ export function BlockNoteEditorWrapper({ docId, darkMode, displayName }: BlockNo
   }, [editor]);
 
   // ── Cursor position broadcasting ──────────────────────────────────
-  // Presence updates are SEPARATE from content — cursor moves don't
-  // block or wait for document sync, reducing perceived lag.
-  //
-  // Strategy:
-  //  • Cursor-only moves (click, arrow keys): throttle with leading edge
-  //    at 80ms — feels near-instant.
-  //  • While typing: throttle at 2s — ProseMirror decoration mapping
-  //    keeps the remote cursor visually accurate between broadcasts,
-  //    so we don't waste bandwidth on per-keystroke position updates.
   useEffect(() => {
     if (!editor || !userId) return;
 
@@ -230,22 +245,15 @@ export function BlockNoteEditorWrapper({ docId, darkMode, displayName }: BlockNo
 
     const handleTransaction = (props: { transaction: any }) => {
       const pos = editor.prosemirrorState.selection.from;
-      // Distinguish local typing from remote updates.
-      // Remote transactions from prosemirror-collab have addToHistory = false.
-      // We only want the long throttle for our OWN typing.
       const isLocalTyping =
         props.transaction.docChanged &&
         props.transaction.getMeta("addToHistory") !== false;
       const now = Date.now();
 
       if (pos === lastSentPos) return;
-
-      // Choose throttle window: short for cursor moves/remote updates (80ms), 
-      // moderate while the local user is typing (1s).
       const throttleMs = isLocalTyping ? 1000 : 80;
 
       if (now - lastSentTime < throttleMs) {
-        // Within throttle window — schedule a trailing-edge send
         if (!throttleTimeout) {
           throttleTimeout = setTimeout(() => {
             lastSentTime = Date.now();
@@ -260,7 +268,6 @@ export function BlockNoteEditorWrapper({ docId, darkMode, displayName }: BlockNo
         return;
       }
 
-      // Outside throttle window — send immediately (leading edge)
       lastSentTime = now;
       lastSentPos = pos;
       updatePresence({ roomId: docId, data: { cursor: { pos } } });
@@ -296,12 +303,117 @@ export function BlockNoteEditorWrapper({ docId, darkMode, displayName }: BlockNo
   }
 
   return (
-    <div className="h-full overflow-y-auto bn-container" data-color-scheme={darkMode ? "dark" : "light"}>
+    <div className="h-full overflow-y-auto bn-container relative" data-color-scheme={darkMode ? "dark" : "light"}>
       <BlockNoteView
         editor={sync.editor}
         theme={darkMode ? "dark" : "light"}
         style={{ minHeight: "100%", background: "transparent" }}
       />
+      <RemoteCursorsOverlay editor={sync.editor} />
+    </div>
+  );
+}
+
+// ── Remote Cursors Overlay ───────────────────────────────────────────
+// Calculates coordinates for remote cursors and renders them as absolute
+// positioned elements, allowing smooth CSS transitions on move.
+function RemoteCursorsOverlay({ editor }: { editor: BlockNoteEditor | null }) {
+  const [cursorCoords, setCursorCoords] = useState<any[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!editor?.prosemirrorView) return;
+    const view = editor.prosemirrorView;
+
+    const updateCoords = () => {
+      const pluginState = REMOTE_CURSORS_KEY.getState(view.state);
+      if (!pluginState || !pluginState.cursors) return;
+
+      const viewportRect = view.dom.getBoundingClientRect();
+      const parentRect = containerRef.current?.getBoundingClientRect() || viewportRect;
+
+      const newCoords = pluginState.cursors.map((c: any) => {
+        try {
+          const coords = view.coordsAtPos(c.pos);
+          return {
+            ...c,
+            top: coords.top - parentRect.top,
+            left: coords.left - parentRect.left,
+          };
+        } catch (e) {
+          return null;
+        }
+      }).filter(Boolean);
+
+      setCursorCoords((prev) => {
+        // Simple optimization to avoid unnecessary re-renders if nothing moved
+        if (JSON.stringify(prev) === JSON.stringify(newCoords)) return prev;
+        return newCoords;
+      });
+    };
+
+    // Update on animation frames for smooth visual feedback
+    let rafId: number;
+    const loop = () => {
+      updateCoords();
+      rafId = requestAnimationFrame(loop);
+    };
+    rafId = requestAnimationFrame(loop);
+
+    return () => cancelAnimationFrame(rafId);
+  }, [editor]);
+
+  return (
+    <div 
+      ref={containerRef}
+      style={{ 
+        position: "absolute", 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0, 
+        pointerEvents: "none",
+        zIndex: 50,
+        overflow: "hidden"
+      }}
+    >
+      {cursorCoords.map((c) => (
+        <div
+          key={c.userId}
+          className={`collaboration-cursor ${c.isStale ? "collaboration-cursor--stale" : ""}`}
+          style={{
+            transform: `translate3d(${c.left}px, ${c.top}px, 0)`,
+            transition: "transform 0.12s cubic-bezier(0.165, 0.84, 0.44, 1.0), opacity 0.5s ease",
+            color: c.color,
+          }}
+        >
+          <div 
+            className="collaboration-cursor__caret" 
+            style={{ 
+              backgroundColor: c.color,
+              height: "1.2em",
+              width: "2px"
+            }} 
+          />
+          <div
+            className="collaboration-cursor__label"
+            style={{ 
+              backgroundColor: c.color,
+              color: "white",
+              padding: "2px 6px",
+              borderRadius: "4px 4px 4px 0px",
+              fontSize: "10px",
+              fontWeight: "600",
+              whiteSpace: "nowrap",
+              transform: "translateY(-100%)",
+              marginTop: "-2px",
+              display: c.isStale ? "none" : "block"
+            }}
+          >
+            {c.name}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

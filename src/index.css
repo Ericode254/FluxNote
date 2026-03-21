@@ -87,6 +87,22 @@ body {
 
 /* Base cursor element — smooth transitions for position jumps */
 .collaboration-cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 1000;
+  transition: all 0.1s ease-out;
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-start;
+  opacity: 1;
+}
+
+.collaboration-cursor__caret {
+  width: 2px;
+  height: 1.25em;
+  background-color: currentColor;
   transition: opacity 0.5s ease;
 }
 
@@ -117,8 +133,33 @@ body {
 
 /* Subtle pulse when a cursor first appears / moves to a new position */
 @keyframes cursor-arrive {
-  0% { opacity: 0; transform: translateY(-2px); }
+  0% { opacity: 0; transform: translateY(-4px); }
   100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Smooth text insertion ────────────────────────────────────────── */
+
+.smooth-text-insertion {
+  animation: text-fade-in 0.8s cubic-bezier(0.165, 0.84, 0.44, 1.0) forwards;
+  border-bottom: 2px solid transparent; /* Reserve space if needed */
+}
+
+@keyframes text-fade-in {
+  0% {
+    opacity: 0.3;
+    background-color: rgba(79, 145, 255, 0.15);
+    transform: scale(0.98);
+  }
+  20% {
+    opacity: 1;
+    background-color: rgba(79, 145, 255, 0.25);
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    background-color: transparent;
+    transform: scale(1);
+  }
 }
 
 /* Scrollbar styling */
