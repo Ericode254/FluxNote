@@ -31,10 +31,16 @@ interface PresenceData {
   cursor?: {
     pos: number;
   };
+  selection?: {
+    from: number;
+    to: number;
+  };
 }
 
 const SMOOTH_TEXT_KEY = new PluginKey("smooth-text");
 const REMOTE_CURSORS_KEY = new PluginKey("remote-cursors");
+const REMOTE_SELECTIONS_KEY = new PluginKey("remote-selections");
+
 
 function getColorForUser(userId: string) {
   let hash = 0;
@@ -177,7 +183,11 @@ export const BlockNoteEditorWrapper = forwardRef<BlockNoteEditorWrapperHandle, B
                             pos,
                             name: p.name || "Anonymous",
                             color: getColorForUser(p.userId),
-                            isStale: now - lastSeen >= STALE_FADE_MS
+                            isStale: now - lastSeen >= STALE_FADE_MS,
+                            selection: data.selection ? {
+                              from: tr.mapping.map(data.selection.from),
+                              to: tr.mapping.map(data.selection.to)
+                            } : null
                           });
                         });
                         return { cursors: newCursors };
@@ -185,9 +195,33 @@ export const BlockNoteEditorWrapper = forwardRef<BlockNoteEditorWrapperHandle, B
                       return { cursors };
                     },
                   },
+                  props: {
+                    decorations(state) {
+                      const pluginState = this.getState(state);
+                      if (!pluginState || !pluginState.cursors) return DecorationSet.empty;
+                      
+                      const { cursors } = pluginState;
+                      const decos: Decoration[] = [];
+                      cursors.forEach((c: any) => {
+
+                        if (c.selection && c.selection.from !== c.selection.to && !c.isStale) {
+                          const from = Math.min(c.selection.from, c.selection.to);
+                          const to = Math.max(c.selection.from, c.selection.to);
+                          if (from >= 0 && to <= state.doc.content.size) {
+                            decos.push(Decoration.inline(from, to, {
+                              style: `background-color: ${c.color}33; transition: background-color 0.2s;`,
+                              class: "remote-selection-highlight"
+                            }));
+                          }
+                        }
+                      });
+                      return DecorationSet.create(state.doc, decos);
+                    }
+                  }
                 }),
               ];
             },
+
           }),
         ],
       },
@@ -226,14 +260,23 @@ export const BlockNoteEditorWrapper = forwardRef<BlockNoteEditorWrapperHandle, B
     let throttleTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const handleTransaction = (props: { transaction: any }) => {
-      const pos = editor.prosemirrorState.selection.from;
+      const selection = editor.prosemirrorState.selection;
+      const pos = selection.from;
       const isLocalTyping =
         props.transaction.docChanged &&
         props.transaction.getMeta("addToHistory") !== false;
       const now = Date.now();
 
-      if (pos === lastSentPos) return;
+      // Only skip if both pos and selection range same
+      if (pos === lastSentPos) {
+        const lastData = presenceRef.current?.find(p => p.userId === userId)?.data as PresenceData;
+        if (lastData?.selection?.from === selection.from && lastData?.selection?.to === selection.to) {
+          return;
+        }
+      }
+
       const throttleMs = isLocalTyping ? 1000 : 80;
+
 
       if (now - lastSentTime < throttleMs) {
         if (!throttleTimeout) {
@@ -252,7 +295,14 @@ export const BlockNoteEditorWrapper = forwardRef<BlockNoteEditorWrapperHandle, B
 
       lastSentTime = now;
       lastSentPos = pos;
-      updatePresence({ roomId: docId, data: { cursor: { pos } } });
+      updatePresence({ 
+        roomId: docId, 
+        data: { 
+          cursor: { pos },
+          selection: { from: selection.from, to: selection.to }
+        } 
+      });
+
     };
 
     editor._tiptapEditor.on("transaction", handleTransaction);
