@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import { PresenceIndicator } from "./PresenceIndicator";
 import { InviteButton } from "./InviteButton";
 import { toast } from "sonner";
-import { BlockNoteEditorWrapper } from "./BlockNoteEditorWrapper";
+import { BlockNoteEditorWrapper, BlockNoteEditorWrapperHandle } from "./BlockNoteEditorWrapper";
 import { ErrorBoundary } from "./ErrorBoundary";
+
 
 interface EditorProps {
   docId: Id<"documents">;
@@ -19,6 +20,7 @@ export function Editor({ docId, darkMode }: EditorProps) {
   const resetDocument = useMutation(api.documents.resetDocument);
   const { isAuthenticated } = useConvexAuth();
   const myProfile = useQuery(api.userProfiles.getMyProfile);
+  const editorRef = useRef<BlockNoteEditorWrapperHandle>(null);
 
   const [localTitle, setLocalTitle] = useState<string>("");
   const [editingTitle, setEditingTitle] = useState(false);
@@ -101,8 +103,20 @@ export function Editor({ docId, darkMode }: EditorProps) {
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Download */}
+          <button
+            onClick={() => editorRef.current?.downloadMarkdown(localTitle)}
+            className="p-2 rounded-lg hover:bg-[#F5F5F5] dark:hover:bg-[#3A3A4E] text-[#555555] dark:text-[#AAAAAA] transition-colors"
+            title="Download as Markdown"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+          </button>
+
           {/* Presence */}
           {isAuthenticated && <PresenceIndicator roomId={docId} />}
+
 
           {/* Invite */}
           {(doc.readInviteCode || doc.writeInviteCode) && (
@@ -124,11 +138,13 @@ export function Editor({ docId, darkMode }: EditorProps) {
         >
           <BlockNoteEditorWrapper
             key={docId}
+            ref={editorRef}
             docId={docId}
             darkMode={darkMode}
             displayName={displayName}
             readOnly={doc.role === "read"}
           />
+
         </ErrorBoundary>
       </div>
 

@@ -10,7 +10,11 @@ import usePresence from "@convex-dev/presence/react";
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey, Selection } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useImperativeHandle, forwardRef } from "react";
+
+export interface BlockNoteEditorWrapperHandle {
+  downloadMarkdown: (title: string) => void;
+}
 
 interface BlockNoteEditorWrapperProps {
   docId: Id<"documents">;
@@ -18,8 +22,6 @@ interface BlockNoteEditorWrapperProps {
   displayName: string;
   readOnly?: boolean;
 }
-
-
 
 const COLORS = [
   "#FF5F5F", "#4F91FF", "#32D74B", "#FF9500", "#AF52DE", "#FFCC00", "#5AC8FA", "#FF2D55",
@@ -34,8 +36,6 @@ interface PresenceData {
 const SMOOTH_TEXT_KEY = new PluginKey("smooth-text");
 const REMOTE_CURSORS_KEY = new PluginKey("remote-cursors");
 
-
-
 function getColorForUser(userId: string) {
   let hash = 0;
   for (let i = 0; i < userId.length; i++) {
@@ -44,34 +44,27 @@ function getColorForUser(userId: string) {
   return COLORS[Math.abs(hash) % COLORS.length];
 }
 
-// ─── Stale cursor thresholds ────────────────────────────────────────
-const STALE_FADE_MS = 5_000;    // fade to 30% opacity after 5s inactivity
-const STALE_REMOVE_MS = 10_000; // remove cursor entirely after 10s
+const STALE_FADE_MS = 5_000;
+const STALE_REMOVE_MS = 10_000;
 
-export function BlockNoteEditorWrapper({
+export const BlockNoteEditorWrapper = forwardRef<BlockNoteEditorWrapperHandle, BlockNoteEditorWrapperProps>(({
   docId,
   darkMode,
   displayName,
   readOnly = false,
-}: BlockNoteEditorWrapperProps) {
-
+}, ref) => {
   const userId = useQuery(api.presence.getUserId);
   const presence = usePresence(api.presence, docId, userId || "");
   const updatePresence = useMutation(api.presence.update);
 
-  // Use refs so the ProseMirror plugin closure always sees current values
-  // (the plugin is created once and never re-created, so bare variables
-  //  would be stale — e.g. userId starts as `undefined` before the query resolves)
   const userIdRef = useRef(userId);
   userIdRef.current = userId;
 
   const presenceRef = useRef(presence);
   presenceRef.current = presence;
 
-  // Track when we last received a presence update per remote user
   const lastSeenRef = useRef<Record<string, number>>({});
 
-  // Update lastSeen timestamps whenever presence data changes
   useEffect(() => {
     if (!presence) return;
     const now = Date.now();
@@ -79,14 +72,12 @@ export function BlockNoteEditorWrapper({
     presence.forEach((p) => {
       activeIds.add(p.userId);
       const data = p.data as PresenceData;
-      // Update timestamp whenever we see fresh cursor data
       if (data?.cursor) {
         lastSeenRef.current[p.userId] = now;
       } else if (!lastSeenRef.current[p.userId]) {
         lastSeenRef.current[p.userId] = now;
       }
     });
-    // Clean up entries for users who left entirely
     for (const uid of Object.keys(lastSeenRef.current)) {
       if (!activeIds.has(uid)) {
         delete lastSeenRef.current[uid];
@@ -108,13 +99,10 @@ export function BlockNoteEditorWrapper({
                     init() { return DecorationSet.empty; },
                     apply(tr, set) {
                       set = set.map(tr.mapping, tr.doc);
-                      
-                      // Identify remote changes and mark them for animation
-                      // Remote transactions from prosemirror-sync/collab have addToHistory = false
                       if (tr.docChanged && tr.getMeta("addToHistory") === false) {
-                        tr.steps.forEach((step, i) => {
+                        tr.steps.forEach((step: any, i: number) => {
                           const map = tr.mapping.maps[i];
-                          map.forEach((_oldStart, _oldEnd, newStart, newEnd) => {
+                          map.forEach((_oldStart: any, _oldEnd: any, newStart: any, newEnd: any) => {
                             if (newEnd > newStart) {
                               set = set.add(tr.doc, [
                                 Decoration.inline(newStart, newEnd, {
@@ -125,12 +113,9 @@ export function BlockNoteEditorWrapper({
                           });
                         });
                       }
-
-                      // Cleanup on next interaction or manual meta
                       if (tr.getMeta("smooth-text-cleanup")) {
                          return DecorationSet.empty;
                       }
-                      
                       return set;
                     },
                   },
@@ -142,7 +127,6 @@ export function BlockNoteEditorWrapper({
                       update() {
                         const set = SMOOTH_TEXT_KEY.getState(view.state);
                         if (set && set.find().length > 0) {
-                          // Schedule cleanup
                           setTimeout(() => {
                             if (!view.isDestroyed) {
                               view.dispatch(view.state.tr.setMeta("smooth-text-cleanup", true));
@@ -156,7 +140,6 @@ export function BlockNoteEditorWrapper({
               ];
             }
           }),
-
           Extension.create({
             name: "remote-cursors",
             addProseMirrorPlugins() {
@@ -167,35 +150,28 @@ export function BlockNoteEditorWrapper({
                     init() { return { cursors: [] as any[] }; },
                     apply(tr, value, oldState, newState) {
                       let { cursors } = value;
-                      // Map positions
-                      cursors = cursors.map(c => ({
+                      cursors = cursors.map((c: any) => ({
                         ...c,
                         pos: tr.mapping.map(c.pos)
                       }));
-
                       if (tr.getMeta("presenceUpdate") || tr.docChanged) {
                         const now = Date.now();
                         const newCursors: any[] = [];
-                        
                         presenceRef.current?.forEach((p) => {
                           const data = p.data as PresenceData;
                           if (p.userId === userIdRef.current || !data?.cursor) return;
-                          
                           const lastSeen = lastSeenRef.current[p.userId] ?? now;
                           if (now - lastSeen >= STALE_REMOVE_MS) return;
-
                           let pos = data.cursor.pos;
                           const existing = cursors.find((c: any) => c.userId === p.userId);
                           if (existing && !tr.getMeta("presenceUpdate")) {
                             pos = existing.pos;
                           }
-
                           if (pos < 0 || pos > newState.doc.content.size) return;
                           const $pos = newState.doc.resolve(pos);
                           if (!$pos.parent.isTextblock) {
                             pos = Selection.near($pos, -1).from;
                           }
-
                           newCursors.push({
                             userId: p.userId,
                             pos,
@@ -220,7 +196,6 @@ export function BlockNoteEditorWrapper({
 
   const editor = sync?.editor;
 
-  // ── Trigger decoration rebuild when presence data changes ──────────
   useEffect(() => {
     if (editor?.prosemirrorView) {
       const view = editor.prosemirrorView;
@@ -232,7 +207,6 @@ export function BlockNoteEditorWrapper({
     }
   }, [presence, editor]);
 
-  // ── Periodic stale-cursor check ────────────────────────────────────
   useEffect(() => {
     if (!editor?.prosemirrorView) return;
     const view = editor.prosemirrorView;
@@ -244,7 +218,6 @@ export function BlockNoteEditorWrapper({
     return () => clearInterval(interval);
   }, [editor]);
 
-  // ── Cursor position broadcasting ──────────────────────────────────
   useEffect(() => {
     if (!editor || !userId || readOnly) return;
 
@@ -289,6 +262,19 @@ export function BlockNoteEditorWrapper({
     };
   }, [editor, userId, docId, updatePresence, readOnly]);
 
+  useImperativeHandle(ref, () => ({
+    downloadMarkdown: async (title: string) => {
+      if (!editor) return;
+      const markdown = await editor.blocksToMarkdownLossy(editor.document);
+      const blob = new Blob([markdown], { type: "text/markdown" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${title || "Untitled"}.md`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  }), [editor]);
 
   if (sync.isLoading) {
     return (
@@ -320,15 +306,11 @@ export function BlockNoteEditorWrapper({
         editable={!readOnly}
         style={{ minHeight: "100%", background: "transparent" }}
       />
-
       <RemoteCursorsOverlay editor={sync.editor} />
     </div>
   );
-}
+});
 
-// ── Remote Cursors Overlay ───────────────────────────────────────────
-// Calculates coordinates for remote cursors and renders them as absolute
-// positioned elements, allowing smooth CSS transitions on move.
 function RemoteCursorsOverlay({ editor }: { editor: BlockNoteEditor | null }) {
   const [cursorCoords, setCursorCoords] = useState<any[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -358,13 +340,11 @@ function RemoteCursorsOverlay({ editor }: { editor: BlockNoteEditor | null }) {
       }).filter(Boolean);
 
       setCursorCoords((prev) => {
-        // Simple optimization to avoid unnecessary re-renders if nothing moved
         if (JSON.stringify(prev) === JSON.stringify(newCoords)) return prev;
         return newCoords;
       });
     };
 
-    // Update on animation frames for smooth visual feedback
     let rafId: number;
     const loop = () => {
       updateCoords();

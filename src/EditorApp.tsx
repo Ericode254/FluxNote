@@ -7,6 +7,8 @@ import { Sidebar } from "./Sidebar";
 import { Editor } from "./Editor";
 import { SignOutButton } from "./SignOutButton";
 import { DisplayNameModal } from "./DisplayNameModal";
+import { ProfileMenu } from "./ProfileMenu";
+
 
 
 interface EditorAppProps {
@@ -80,20 +82,7 @@ export function EditorApp({ darkMode, onToggleDark }: EditorAppProps) {
 
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Display name button */}
-          {myProfile && (
-            <button
-              onClick={() => setShowNameModal(true)}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-[#555555] dark:text-[#AAAAAA] hover:bg-[#F5F5F5] dark:hover:bg-[#3A3A4E] transition-colors border border-[#E0E0E0] dark:border-[#3A3A4E]"
-              title="Change display name"
-            >
-              <span className="w-5 h-5 rounded-full bg-[#4F91FF] text-white text-xs flex items-center justify-center font-bold">
-                {myProfile.displayName[0]?.toUpperCase()}
-              </span>
-              <span className="max-w-[100px] truncate">{myProfile.displayName}</span>
-            </button>
-          )}
+        <div className="flex items-center gap-3">
           <button
             onClick={onToggleDark}
             className="p-2 rounded-lg hover:bg-[#F5F5F5] dark:hover:bg-[#3A3A4E] transition-colors"
@@ -109,8 +98,11 @@ export function EditorApp({ darkMode, onToggleDark }: EditorAppProps) {
               </svg>
             )}
           </button>
-          <SignOutButton />
+          
+          <ProfileMenu onEditProfile={() => setShowNameModal(true)} />
         </div>
+
+
       </header>
 
       <div className="flex flex-1 overflow-hidden">
