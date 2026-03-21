@@ -1,27 +1,35 @@
 import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
+
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import { toast } from "sonner";
 
 interface InviteButtonProps {
-  inviteCode: string;
+  readInviteCode?: string;
+  writeInviteCode?: string;
   docId: Id<"documents">;
+  isOwner: boolean;
 }
 
-export function InviteButton({ inviteCode, docId }: InviteButtonProps) {
+
+export function InviteButton({ readInviteCode, writeInviteCode, docId, isOwner }: InviteButtonProps) {
   const [showModal, setShowModal] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedType, setCopiedType] = useState<"read" | "write" | null>(null);
   const regenerate = useMutation(api.documents.regenerateInviteCode);
+  const removeAccess = useMutation(api.documents.removeAccess);
+  const collaborators = useQuery(api.documents.listAccess, { documentId: docId });
 
-  const inviteUrl = `${window.location.origin}${window.location.pathname}?invite=${inviteCode}`;
+  const getInviteUrl = (code?: string) => 
+    code ? `${window.location.origin}${window.location.pathname}?invite=${code}` : "";
 
-  const handleCopy = async () => {
+  const handleCopy = async (type: "read" | "write", code?: string) => {
+    if (!code) return;
     try {
-      await navigator.clipboard.writeText(inviteUrl);
-      setCopied(true);
-      toast.success("Invite link copied!");
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(getInviteUrl(code));
+      setCopiedType(type);
+      toast.success(`${type === "read" ? "View" : "Edit"} link copied!`);
+      setTimeout(() => setCopiedType(null), 2000);
     } catch {
       toast.error("Failed to copy link");
     }
@@ -30,11 +38,21 @@ export function InviteButton({ inviteCode, docId }: InviteButtonProps) {
   const handleRegenerate = async () => {
     try {
       await regenerate({ id: docId });
-      toast.success("New invite link generated");
+      toast.success("Invite links regenerated");
     } catch {
-      toast.error("Failed to regenerate link");
+      toast.error("Failed to regenerate links");
     }
   };
+
+  const handleRemoveUser = async (userId: string) => {
+    try {
+      await removeAccess({ documentId: docId, userId });
+      toast.success("User removed from document");
+    } catch {
+      toast.error("Failed to remove user");
+    }
+  };
+
 
   return (
     <>
@@ -74,44 +92,93 @@ export function InviteButton({ inviteCode, docId }: InviteButtonProps) {
               </button>
             </div>
 
-            {/* Link display */}
-            <div className="flex gap-2 mb-4">
-              <div className="flex-1 px-3 py-2.5 rounded-lg bg-[#F5F5F5] dark:bg-[#1E1E2F] border border-[#E0E0E0] dark:border-[#3A3A4E] text-sm text-[#555555] dark:text-[#AAAAAA] truncate font-mono">
-                {inviteUrl}
+            {/* Link sections */}
+            <div className="space-y-4 mb-6">
+              {/* Can View */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#555555] dark:text-[#AAAAAA] mb-2 px-1">
+                  Can View
+                </label>
+                <div className="flex gap-2">
+                  <div className="flex-1 px-3 py-2 rounded-lg bg-[#F5F5F5] dark:bg-[#1E1E2F] border border-[#E0E0E0] dark:border-[#3A3A4E] text-xs text-[#555555] dark:text-[#AAAAAA] truncate font-mono">
+                    {getInviteUrl(readInviteCode)}
+                  </div>
+                  <button
+                    onClick={() => handleCopy("read", readInviteCode)}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors flex-shrink-0 ${
+                      copiedType === "read"
+                        ? "bg-[#32D74B]/20 text-[#32D74B] border border-[#32D74B]/30"
+                        : "bg-[#4F91FF] hover:bg-[#3a7de8] text-white"
+                    }`}
+                  >
+                    {copiedType === "read" ? "Copied" : "Copy"}
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={handleCopy}
-                className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
-                  copied
-                    ? "bg-[#32D74B]/20 text-[#32D74B] border border-[#32D74B]/30"
-                    : "bg-[#4F91FF] hover:bg-[#3a7de8] text-white"
-                }`}
-              >
-                {copied ? (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                )}
-              </button>
+
+              {/* Can Edit */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#555555] dark:text-[#AAAAAA] mb-2 px-1">
+                  Can Edit
+                </label>
+                <div className="flex gap-2">
+                  <div className="flex-1 px-3 py-2 rounded-lg bg-[#F5F5F5] dark:bg-[#1E1E2F] border border-[#E0E0E0] dark:border-[#3A3A4E] text-xs text-[#555555] dark:text-[#AAAAAA] truncate font-mono">
+                    {getInviteUrl(writeInviteCode)}
+                  </div>
+                  <button
+                    onClick={() => handleCopy("write", writeInviteCode)}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors flex-shrink-0 ${
+                      copiedType === "write"
+                        ? "bg-[#32D74B]/20 text-[#32D74B] border border-[#32D74B]/30"
+                        : "bg-[#4F91FF] hover:bg-[#3a7de8] text-white"
+                    }`}
+                  >
+                    {copiedType === "write" ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-[#FF9500]/10 dark:bg-[#FF9500]/10 border border-[#FF9500]/20 mb-4">
-              <svg className="w-4 h-4 text-[#FF9500] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-xs text-[#FF9500]">Anyone with this link can view and edit this document.</p>
-            </div>
+            {/* Collaborators Section (Only for Owner) */}
+            {isOwner && collaborators && collaborators.length > 0 && (
+              <div className="mb-6 pt-5 border-t border-[#E0E0E0] dark:border-[#3A3A4E]">
+                <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#555555] dark:text-[#AAAAAA] mb-3 px-1">
+                  Who has access
+                </h4>
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {collaborators.map((u) => (
+                    <div key={u.userId} className="flex items-center justify-between gap-3 p-2 rounded-xl bg-[#F5F5F5]/50 dark:bg-[#1E1E2F]/50 group">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-[#4F91FF]/10 flex items-center justify-center text-[10px] font-bold text-[#4F91FF] flex-shrink-0">
+                          {u.name[0]?.toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-[#1C1C1C] dark:text-[#EAEAEA] truncate">{u.name}</p>
+                          <p className="text-[10px] text-[#555555] dark:text-[#AAAAAA] uppercase font-bold">{u.role}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveUser(u.userId)}
+                        className="p-1.5 rounded-lg hover:bg-[#FF5F5F]/10 text-[#FF5F5F] transition-colors opacity-0 group-hover:opacity-100"
+                        title="Remove user"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <button
               onClick={handleRegenerate}
-              className="w-full px-4 py-2 rounded-lg border border-[#E0E0E0] dark:border-[#3A3A4E] text-sm text-[#555555] dark:text-[#AAAAAA] hover:bg-[#F5F5F5] dark:hover:bg-[#3A3A4E] transition-colors font-medium"
+              className="w-full px-4 py-2 rounded-lg border border-[#E0E0E0] dark:border-[#3A3A4E] text-xs text-[#555555] dark:text-[#AAAAAA] hover:bg-[#F5F5F5] dark:hover:bg-[#3A3A4E] transition-colors font-medium"
             >
-              🔄 Generate new link (revokes old one)
+              🔄 Regenerate all links
             </button>
+
           </div>
         </div>
       )}

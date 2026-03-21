@@ -105,8 +105,13 @@ export function Editor({ docId, darkMode }: EditorProps) {
           {isAuthenticated && <PresenceIndicator roomId={docId} />}
 
           {/* Invite */}
-          {doc.inviteCode && (
-            <InviteButton inviteCode={doc.inviteCode} docId={docId} />
+          {(doc.readInviteCode || doc.writeInviteCode) && (
+            <InviteButton 
+              readInviteCode={doc.readInviteCode} 
+              writeInviteCode={doc.writeInviteCode} 
+              docId={docId} 
+              isOwner={doc.isOwner}
+            />
           )}
         </div>
       </div>
@@ -122,9 +127,11 @@ export function Editor({ docId, darkMode }: EditorProps) {
             docId={docId}
             darkMode={darkMode}
             displayName={displayName}
+            readOnly={doc.role === "read"}
           />
         </ErrorBoundary>
       </div>
+
     </div>
   );
 }

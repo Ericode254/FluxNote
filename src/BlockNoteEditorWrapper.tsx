@@ -16,7 +16,10 @@ interface BlockNoteEditorWrapperProps {
   docId: Id<"documents">;
   darkMode: boolean;
   displayName: string;
+  readOnly?: boolean;
 }
+
+
 
 const COLORS = [
   "#FF5F5F", "#4F91FF", "#32D74B", "#FF9500", "#AF52DE", "#FFCC00", "#5AC8FA", "#FF2D55",
@@ -45,7 +48,13 @@ function getColorForUser(userId: string) {
 const STALE_FADE_MS = 5_000;    // fade to 30% opacity after 5s inactivity
 const STALE_REMOVE_MS = 10_000; // remove cursor entirely after 10s
 
-export function BlockNoteEditorWrapper({ docId, darkMode, displayName }: BlockNoteEditorWrapperProps) {
+export function BlockNoteEditorWrapper({
+  docId,
+  darkMode,
+  displayName,
+  readOnly = false,
+}: BlockNoteEditorWrapperProps) {
+
   const userId = useQuery(api.presence.getUserId);
   const presence = usePresence(api.presence, docId, userId || "");
   const updatePresence = useMutation(api.presence.update);
@@ -237,7 +246,7 @@ export function BlockNoteEditorWrapper({ docId, darkMode, displayName }: BlockNo
 
   // ── Cursor position broadcasting ──────────────────────────────────
   useEffect(() => {
-    if (!editor || !userId) return;
+    if (!editor || !userId || readOnly) return;
 
     let lastSentPos = -1;
     let lastSentTime = 0;
@@ -278,7 +287,8 @@ export function BlockNoteEditorWrapper({ docId, darkMode, displayName }: BlockNo
       editor._tiptapEditor.off("transaction", handleTransaction);
       if (throttleTimeout) clearTimeout(throttleTimeout);
     };
-  }, [editor, userId, docId, updatePresence]);
+  }, [editor, userId, docId, updatePresence, readOnly]);
+
 
   if (sync.isLoading) {
     return (
@@ -307,8 +317,10 @@ export function BlockNoteEditorWrapper({ docId, darkMode, displayName }: BlockNo
       <BlockNoteView
         editor={sync.editor}
         theme={darkMode ? "dark" : "light"}
+        editable={!readOnly}
         style={{ minHeight: "100%", background: "transparent" }}
       />
+
       <RemoteCursorsOverlay editor={sync.editor} />
     </div>
   );

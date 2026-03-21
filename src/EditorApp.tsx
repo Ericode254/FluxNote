@@ -18,7 +18,8 @@ export function EditorApp({ darkMode, onToggleDark }: EditorAppProps) {
   const [selectedDocId, setSelectedDocId] = useState<Id<"documents"> | null>(null);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const documents = useQuery(api.documents.list) ?? [];
+  const documents = useQuery(api.documents.list) ?? { owned: [], shared: [] };
+
   const createDoc = useMutation(api.documents.create);
   const myProfile = useQuery(api.userProfiles.getMyProfile);
   const [showNameModal, setShowNameModal] = useState(false);

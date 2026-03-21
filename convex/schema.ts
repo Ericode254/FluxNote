@@ -6,12 +6,18 @@ const applicationTables = {
   documents: defineTable({
     title: v.string(),
     ownerId: v.optional(v.string()),
-    inviteCode: v.optional(v.string()),
     // Legacy fields kept for migration compatibility
+
     content: v.optional(v.string()),
     lastEditedBy: v.optional(v.string()),
+    inviteCode: v.optional(v.string()), // Deprecated
+    readInviteCode: v.optional(v.string()),
+    writeInviteCode: v.optional(v.string()),
   }).index("by_invite_code", ["inviteCode"])
+    .index("by_read_invite_code", ["readInviteCode"])
+    .index("by_write_invite_code", ["writeInviteCode"])
     .index("by_owner_id", ["ownerId"]),
+
 
   userProfiles: defineTable({
     userId: v.string(),
@@ -20,10 +26,13 @@ const applicationTables = {
   documentAccess: defineTable({
     documentId: v.id("documents"),
     userId: v.string(),
+    role: v.optional(v.union(v.literal("read"), v.literal("write"))),
+
   })
     .index("by_user_id", ["userId"])
     .index("by_document_id", ["documentId"])
     .index("by_document_and_user", ["documentId", "userId"]),
+
 };
 
 
