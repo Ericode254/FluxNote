@@ -10,7 +10,9 @@ import usePresence from "@convex-dev/presence/react";
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey, Selection } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
-import { useEffect, useRef, useState, useImperativeHandle, forwardRef } from "react";
+import { useEffect, useRef, useState, useImperativeHandle, forwardRef, useMemo } from "react";
+import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
+import { all, createLowlight } from "lowlight";
 
 export interface BlockNoteEditorWrapperHandle {
   downloadMarkdown: (title: string) => void;
@@ -40,6 +42,8 @@ interface PresenceData {
 const SMOOTH_TEXT_KEY = new PluginKey("smooth-text");
 const REMOTE_CURSORS_KEY = new PluginKey("remote-cursors");
 const REMOTE_SELECTIONS_KEY = new PluginKey("remote-selections");
+
+const lowlight = createLowlight(all);
 
 
 function getColorForUser(userId: string) {
@@ -95,6 +99,9 @@ export const BlockNoteEditorWrapper = forwardRef<BlockNoteEditorWrapperHandle, B
     editorOptions: {
       _tiptapOptions: {
         extensions: [
+          CodeBlockLowlight.configure({
+            lowlight,
+          }),
           Extension.create({
             name: "smooth-text",
             addProseMirrorPlugins() {

@@ -177,3 +177,155 @@ body {
 .dark ::-webkit-scrollbar-thumb {
   background: #3A3A4E;
 }
+
+/* Stale cursor — user inactive for 5+ seconds */
+.collaboration-cursor--stale {
+  opacity: 0.3;
+}
+.collaboration-cursor--stale .collaboration-cursor__label {
+  opacity: 0;
+}
+
+/* Subtle pulse when a cursor first appears / moves to a new position */
+@keyframes cursor-arrive {
+  0% { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Smooth text insertion ────────────────────────────────────────── */
+
+.smooth-text-insertion {
+  animation: text-fade-in 0.8s cubic-bezier(0.165, 0.84, 0.44, 1.0) forwards;
+  border-bottom: 2px solid transparent; /* Reserve space if needed */
+}
+
+@keyframes text-fade-in {
+  0% {
+    opacity: 0.3;
+    background-color: rgba(79, 145, 255, 0.15);
+    transform: scale(0.98);
+  }
+  20% {
+    opacity: 1;
+    background-color: rgba(79, 145, 255, 0.25);
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #E0E0E0;
+  border-radius: 3px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #3A3A4E;
+}
+
+/* ── Code block highlighting ────────────────────────────────────────── */
+.hljs-comment,
+.hljs-quote {
+  color: #707070;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-addition {
+  color: #af52de;
+  font-weight: 600;
+}
+
+.hljs-number,
+.hljs-string,
+.hljs-meta ,
+.hljs-symbol,
+.hljs-bullet {
+  color: #32D74B;
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-params {
+  color: #4F91FF;
+}
+
+.hljs-regexp,
+.hljs-link,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: #FF5F5F;
+}
+
+.hljs-variable,
+.hljs-template-variable,
+.hljs-attribute,
+.hljs-tag,
+.hljs-name {
+  color: #FF9500;
+}
+
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type {
+  color: #FFCC00;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+/* Dark mode overrides for syntax highlighting */
+.dark .hljs-comment,
+.dark .hljs-quote {
+  color: #808080;
+}
+
+.dark .hljs-keyword,
+.dark .hljs-selector-tag,
+.dark .hljs-addition {
+  color: #D6A6FF;
+}
+
+.dark .hljs-number,
+.dark .hljs-string,
+.dark .hljs-symbol,
+.dark .hljs-bullet {
+  color: #8AFF9F;
+}
+
+.dark .hljs-title,
+.dark .hljs-section {
+  color: #7BB0FF;
+}
+
+.dark .hljs-variable,
+.dark .hljs-template-variable,
+.dark .hljs-attribute,
+.dark .hljs-tag,
+.dark .hljs-name {
+  color: #FFB340;
+}
+
+.dark .hljs-built_in,
+.dark .hljs-builtin-name,
+.dark .hljs-literal,
+.dark .hljs-type {
+  color: #FFEA7F;
+}
