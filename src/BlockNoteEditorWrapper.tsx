@@ -95,144 +95,148 @@ export const BlockNoteEditorWrapper = forwardRef<BlockNoteEditorWrapperHandle, B
     }
   }, [presence]);
 
-  const sync = useBlockNoteSync<BlockNoteEditor>(api.documents, docId as string, {
-    editorOptions: {
-      _tiptapOptions: {
-        extensions: [
-          CodeBlockLowlight.configure({
-            lowlight,
-          }),
-          Extension.create({
-            name: "smooth-text",
-            addProseMirrorPlugins() {
-              return [
-                new Plugin({
-                  key: SMOOTH_TEXT_KEY,
-                  state: {
-                    init() { return DecorationSet.empty; },
-                    apply(tr, set) {
-                      set = set.map(tr.mapping, tr.doc);
-                      if (tr.docChanged && tr.getMeta("addToHistory") === false) {
-                        tr.steps.forEach((step: any, i: number) => {
-                          const map = tr.mapping.maps[i];
-                          map.forEach((_oldStart: any, _oldEnd: any, newStart: any, newEnd: any) => {
-                            if (newEnd > newStart) {
-                              set = set.add(tr.doc, [
-                                Decoration.inline(newStart, newEnd, {
-                                  class: "smooth-text-insertion",
-                                }),
-                              ]);
-                            }
-                          });
+  const editorOptions = useMemo(() => ({
+    _tiptapOptions: {
+      extensions: [
+        CodeBlockLowlight.extend({
+          group: "blockContent",
+        }).configure({
+          lowlight,
+        }),
+        Extension.create({
+          name: "smooth-text",
+          addProseMirrorPlugins() {
+            return [
+              new Plugin({
+                key: SMOOTH_TEXT_KEY,
+                state: {
+                  init() { return DecorationSet.empty; },
+                  apply(tr, set) {
+                    set = set.map(tr.mapping, tr.doc);
+                    if (tr.docChanged && tr.getMeta("addToHistory") === false) {
+                      tr.steps.forEach((step: any, i: number) => {
+                        const map = tr.mapping.maps[i];
+                        map.forEach((_oldStart: any, _oldEnd: any, newStart: any, newEnd: any) => {
+                          if (newEnd > newStart) {
+                            set = set.add(tr.doc, [
+                              Decoration.inline(newStart, newEnd, {
+                                class: "smooth-text-insertion",
+                              }),
+                            ]);
+                          }
                         });
-                      }
-                      if (tr.getMeta("smooth-text-cleanup")) {
-                         return DecorationSet.empty;
-                      }
-                      return set;
-                    },
-                  },
-                  props: {
-                    decorations(state) { return this.getState(state); },
-                  },
-                  view(view) {
-                    return {
-                      update() {
-                        const set = SMOOTH_TEXT_KEY.getState(view.state);
-                        if (set && set.find().length > 0) {
-                          setTimeout(() => {
-                            if (!view.isDestroyed) {
-                              view.dispatch(view.state.tr.setMeta("smooth-text-cleanup", true));
-                            }
-                          }, 1000);
-                        }
-                      }
-                    };
-                  }
-                }),
-              ];
-            }
-          }),
-          Extension.create({
-            name: "remote-cursors",
-            addProseMirrorPlugins() {
-              return [
-                new Plugin({
-                  key: REMOTE_CURSORS_KEY,
-                  state: {
-                    init() { return { cursors: [] as any[] }; },
-                    apply(tr, value, oldState, newState) {
-                      let { cursors } = value;
-                      cursors = cursors.map((c: any) => ({
-                        ...c,
-                        pos: tr.mapping.map(c.pos)
-                      }));
-                      if (tr.getMeta("presenceUpdate") || tr.docChanged) {
-                        const now = Date.now();
-                        const newCursors: any[] = [];
-                        presenceRef.current?.forEach((p) => {
-                          const data = p.data as PresenceData;
-                          if (p.userId === userIdRef.current || !data?.cursor) return;
-                          const lastSeen = lastSeenRef.current[p.userId] ?? now;
-                          if (now - lastSeen >= STALE_REMOVE_MS) return;
-                          let pos = data.cursor.pos;
-                          const existing = cursors.find((c: any) => c.userId === p.userId);
-                          if (existing && !tr.getMeta("presenceUpdate")) {
-                            pos = existing.pos;
-                          }
-                          if (pos < 0 || pos > newState.doc.content.size) return;
-                          const $pos = newState.doc.resolve(pos);
-                          if (!$pos.parent.isTextblock) {
-                            pos = Selection.near($pos, -1).from;
-                          }
-                          newCursors.push({
-                            userId: p.userId,
-                            pos,
-                            name: p.name || "Anonymous",
-                            color: getColorForUser(p.userId),
-                            isStale: now - lastSeen >= STALE_FADE_MS,
-                            selection: data.selection ? {
-                              from: tr.mapping.map(data.selection.from),
-                              to: tr.mapping.map(data.selection.to)
-                            } : null
-                          });
-                        });
-                        return { cursors: newCursors };
-                      }
-                      return { cursors };
-                    },
-                  },
-                  props: {
-                    decorations(state) {
-                      const pluginState = this.getState(state);
-                      if (!pluginState || !pluginState.cursors) return DecorationSet.empty;
-                      
-                      const { cursors } = pluginState;
-                      const decos: Decoration[] = [];
-                      cursors.forEach((c: any) => {
-
-                        if (c.selection && c.selection.from !== c.selection.to && !c.isStale) {
-                          const from = Math.min(c.selection.from, c.selection.to);
-                          const to = Math.max(c.selection.from, c.selection.to);
-                          if (from >= 0 && to <= state.doc.content.size) {
-                            decos.push(Decoration.inline(from, to, {
-                              style: `background-color: ${c.color}33; transition: background-color 0.2s;`,
-                              class: "remote-selection-highlight"
-                            }));
-                          }
-                        }
                       });
-                      return DecorationSet.create(state.doc, decos);
                     }
-                  }
-                }),
-              ];
-            },
+                    if (tr.getMeta("smooth-text-cleanup")) {
+                       return DecorationSet.empty;
+                    }
+                    return set;
+                  },
+                },
+                props: {
+                  decorations(state) { return this.getState(state); },
+                },
+                view(view) {
+                  return {
+                    update() {
+                      const set = SMOOTH_TEXT_KEY.getState(view.state);
+                      if (set && set.find().length > 0) {
+                        setTimeout(() => {
+                          if (!view.isDestroyed) {
+                            view.dispatch(view.state.tr.setMeta("smooth-text-cleanup", true));
+                          }
+                        }, 1000);
+                      }
+                    }
+                  };
+                }
+              }),
+            ];
+          }
+        }),
+        Extension.create({
+          name: "remote-cursors",
+          addProseMirrorPlugins() {
+            return [
+              new Plugin({
+                key: REMOTE_CURSORS_KEY,
+                state: {
+                  init() { return { cursors: [] as any[] }; },
+                  apply(tr, value, oldState, newState) {
+                    let { cursors } = value;
+                    cursors = cursors.map((c: any) => ({
+                      ...c,
+                      pos: tr.mapping.map(c.pos)
+                    }));
+                    if (tr.getMeta("presenceUpdate") || tr.docChanged) {
+                      const now = Date.now();
+                      const newCursors: any[] = [];
+                      presenceRef.current?.forEach((p) => {
+                        const data = p.data as PresenceData;
+                        if (p.userId === userIdRef.current || !data?.cursor) return;
+                        const lastSeen = lastSeenRef.current[p.userId] ?? now;
+                        if (now - lastSeen >= STALE_REMOVE_MS) return;
+                        let pos = data.cursor.pos;
+                        const existing = cursors.find((c: any) => c.userId === p.userId);
+                        if (existing && !tr.getMeta("presenceUpdate")) {
+                          pos = existing.pos;
+                        }
+                        if (pos < 0 || pos > newState.doc.content.size) return;
+                        const $pos = newState.doc.resolve(pos);
+                        if (!$pos.parent.isTextblock) {
+                          pos = Selection.near($pos, -1).from;
+                        }
+                        newCursors.push({
+                          userId: p.userId,
+                          pos,
+                          name: p.name || "Anonymous",
+                          color: getColorForUser(p.userId),
+                          isStale: now - lastSeen >= STALE_FADE_MS,
+                          selection: data.selection ? {
+                            from: tr.mapping.map(data.selection.from),
+                            to: tr.mapping.map(data.selection.to)
+                          } : null
+                        });
+                      });
+                      return { cursors: newCursors };
+                    }
+                    return { cursors };
+                  },
+                },
+                props: {
+                  decorations(state) {
+                    const pluginState = this.getState(state);
+                    if (!pluginState || !pluginState.cursors) return DecorationSet.empty;
+                    
+                    const { cursors } = pluginState;
+                    const decos: Decoration[] = [];
+                    cursors.forEach((c: any) => {
 
-          }),
-        ],
-      },
-    } as any,
+                      if (c.selection && c.selection.from !== c.selection.to && !c.isStale) {
+                        const from = Math.min(c.selection.from, c.selection.to);
+                        const to = Math.max(c.selection.from, c.selection.to);
+                        if (from >= 0 && to <= state.doc.content.size) {
+                          decos.push(Decoration.inline(from, to, {
+                            style: `background-color: ${c.color}33; transition: background-color 0.2s;`,
+                            class: "remote-selection-highlight"
+                          }));
+                        }
+                      }
+                    });
+                    return DecorationSet.create(state.doc, decos);
+                  }
+                }
+              }),
+            ];
+          },
+
+        }),
+      ],
+    },
+  }), []);
+
+  const sync = useBlockNoteSync<BlockNoteEditor>(api.documents, docId as string, {
+    editorOptions,
   });
 
   const editor = sync?.editor;
