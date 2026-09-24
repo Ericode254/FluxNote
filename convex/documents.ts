@@ -8,13 +8,41 @@ import { Id } from "./_generated/dataModel";
 
 const prosemirrorSync = new ProsemirrorSync(components.prosemirrorSync);
 
+const SNIPPET_MAX_LENGTH = 140;
+
+function extractSnippet(snapshot: string): string {
+  let text = "";
+  const collect = (node: any) => {
+    if (text.length >= SNIPPET_MAX_LENGTH) return;
+    if (node.text) text += node.text;
+    else if (node.type && ["paragraph", "heading", "listItem"].includes(node.type) && text.length > 0) {
+      text += " ";
+    }
+    for (const child of node.content ?? []) collect(child);
+  };
+  try {
+    collect(JSON.parse(snapshot));
+  } catch {
+    return "";
+  }
+  text = text.trim().replace(/\s+/g, " ");
+  return text.length > SNIPPET_MAX_LENGTH ? text.slice(0, SNIPPET_MAX_LENGTH) + "…" : text;
+}
+
 export const {
   getSnapshot,
   submitSnapshot,
   latestVersion,
   getSteps,
   submitSteps,
-} = prosemirrorSync.syncApi({});
+} = prosemirrorSync.syncApi({
+  onSnapshot: async (ctx, id, snapshot) => {
+    await ctx.db.patch(id as Id<"documents">, {
+      updatedAt: Date.now(),
+      snippet: extractSnippet(snapshot),
+    });
+  },
+});
 
 function generateInviteCode(): string {
   return Math.random().toString(36).substring(2, 10);
@@ -88,6 +116,7 @@ export const create = mutation({
       ownerId: userId ?? undefined,
       readInviteCode,
       writeInviteCode,
+      updatedAt: Date.now(),
     });
     // Initialize the prosemirror document
     await prosemirrorSync.create(ctx, id, {
@@ -102,7 +131,7 @@ export const create = mutation({
 export const updateTitle = mutation({
   args: { id: v.id("documents"), title: v.string() },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.id, { title: args.title });
+    await ctx.db.patch(args.id, { title: args.title, updatedAt: Date.now() });
   },
 });
 
@@ -114,6 +143,7 @@ export const resetDocument = mutation({
       type: "doc",
       content: [],
     });
+    await ctx.db.patch(args.id, { updatedAt: Date.now(), snippet: "" });
   },
 });
 

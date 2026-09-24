@@ -6,6 +6,8 @@ const applicationTables = {
   documents: defineTable({
     title: v.string(),
     ownerId: v.optional(v.string()),
+    updatedAt: v.optional(v.number()),
+    snippet: v.optional(v.string()),
     // Legacy fields kept for migration compatibility
 
     content: v.optional(v.string()),

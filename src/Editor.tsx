@@ -5,7 +5,7 @@ import { Id } from "../convex/_generated/dataModel";
 import { PresenceIndicator } from "./PresenceIndicator";
 import { InviteButton } from "./InviteButton";
 import { toast } from "sonner";
-import { BlockNoteEditorWrapper, BlockNoteEditorWrapperHandle } from "./BlockNoteEditorWrapper";
+import { BlockNoteEditorWrapper, BlockNoteEditorWrapperHandle, SyncStatus } from "./BlockNoteEditorWrapper";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 
@@ -24,6 +24,7 @@ export function Editor({ docId, darkMode }: EditorProps) {
 
   const [localTitle, setLocalTitle] = useState<string>("");
   const [editingTitle, setEditingTitle] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("saved");
   const lastSavedTitleRef = { current: "" };
 
   useEffect(() => {
@@ -32,6 +33,10 @@ export function Editor({ docId, darkMode }: EditorProps) {
       lastSavedTitleRef.current = doc.title;
     }
   }, [doc?.title]);
+
+  useEffect(() => {
+    setSyncStatus("saved");
+  }, [docId]);
 
   const handleTitleSave = async () => {
     setEditingTitle(false);
@@ -100,6 +105,9 @@ export function Editor({ docId, darkMode }: EditorProps) {
               {localTitle || "Untitled"}
             </button>
           )}
+          {!doc.role || doc.role === "write" ? (
+            <SyncStatusBadge status={syncStatus} />
+          ) : null}
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -143,11 +151,38 @@ export function Editor({ docId, darkMode }: EditorProps) {
             darkMode={darkMode}
             displayName={displayName}
             readOnly={doc.role === "read"}
+            onSyncStatusChange={setSyncStatus}
           />
 
         </ErrorBoundary>
       </div>
 
     </div>
+  );
+}
+
+function SyncStatusBadge({ status }: { status: SyncStatus }) {
+  return (
+    <span
+      className={`hidden sm:flex items-center gap-1.5 text-xs flex-shrink-0 transition-colors ${
+        status === "saving"
+          ? "text-[#555555] dark:text-[#AAAAAA]"
+          : "text-[#32D74B]"
+      }`}
+    >
+      {status === "saving" ? (
+        <>
+          <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+          Saving…
+        </>
+      ) : (
+        <>
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          Saved
+        </>
+      )}
+    </span>
   );
 }

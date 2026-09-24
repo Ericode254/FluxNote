@@ -10,6 +10,7 @@ import usePresence from "@convex-dev/presence/react";
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey, Selection } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
+import { sendableSteps } from "prosemirror-collab";
 import { useEffect, useRef, useState, useImperativeHandle, forwardRef, useMemo } from "react";
 import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
 import { all, createLowlight } from "lowlight";
@@ -18,11 +19,14 @@ export interface BlockNoteEditorWrapperHandle {
   downloadMarkdown: (title: string) => void;
 }
 
+export type SyncStatus = "saved" | "saving";
+
 interface BlockNoteEditorWrapperProps {
   docId: Id<"documents">;
   darkMode: boolean;
   displayName: string;
   readOnly?: boolean;
+  onSyncStatusChange?: (status: SyncStatus) => void;
 }
 
 const COLORS = [
@@ -62,6 +66,7 @@ export const BlockNoteEditorWrapper = forwardRef<BlockNoteEditorWrapperHandle, B
   darkMode,
   displayName,
   readOnly = false,
+  onSyncStatusChange,
 }, ref) => {
   const userId = useQuery(api.presence.getUserId);
   const presence = usePresence(api.presence, docId, userId || "");
@@ -240,6 +245,19 @@ export const BlockNoteEditorWrapper = forwardRef<BlockNoteEditorWrapperHandle, B
   });
 
   const editor = sync?.editor;
+
+  useEffect(() => {
+    if (!editor || readOnly) return;
+    const report = () => {
+      const hasUnconfirmedSteps = !!sendableSteps(editor.prosemirrorState);
+      onSyncStatusChange?.(hasUnconfirmedSteps ? "saving" : "saved");
+    };
+    report();
+    editor._tiptapEditor.on("transaction", report);
+    return () => {
+      editor._tiptapEditor.off("transaction", report);
+    };
+  }, [editor, readOnly, onSyncStatusChange]);
 
   useEffect(() => {
     if (editor?.prosemirrorView) {

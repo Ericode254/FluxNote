@@ -7,7 +7,7 @@ interface OnboardingScreenProps {
 
 export function OnboardingScreen({ darkMode, onToggleDark }: OnboardingScreenProps) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden">
       {/* Header */}
       <header className="h-16 flex justify-between items-center border-b border-[#E0E0E0] dark:border-[#3A3A4E] px-6 bg-white dark:bg-[#2A2A3B] shadow-sm">
         <div className="flex items-center gap-2">
@@ -34,7 +34,7 @@ export function OnboardingScreen({ darkMode, onToggleDark }: OnboardingScreenPro
 
       <main className="flex-1 flex flex-col lg:flex-row">
         {/* Left: Hero */}
-        <div className="flex-1 flex flex-col items-center justify-center p-8 lg:p-16 bg-gradient-to-br from-[#4F91FF]/10 via-[#00D8FF]/5 to-transparent dark:from-[#4F91FF]/20 dark:via-[#00D8FF]/10 dark:to-transparent">
+        <div className="flex-1 min-w-0 flex flex-col items-center justify-center p-8 lg:p-16 bg-gradient-to-br from-[#4F91FF]/10 via-[#00D8FF]/5 to-transparent dark:from-[#4F91FF]/20 dark:via-[#00D8FF]/10 dark:to-transparent">
           <div className="max-w-lg w-full">
             {/* Illustration */}
             <div className="mb-8 flex justify-center">
@@ -57,7 +57,7 @@ export function OnboardingScreen({ darkMode, onToggleDark }: OnboardingScreenPro
         </div>
 
         {/* Right: Sign in */}
-        <div className="flex items-center justify-center p-8 lg:p-16 bg-white dark:bg-[#2A2A3B] lg:w-[480px] lg:min-h-screen border-t lg:border-t-0 lg:border-l border-[#E0E0E0] dark:border-[#3A3A4E]">
+        <div className="flex-shrink-0 flex items-center justify-center p-8 lg:p-12 xl:p-16 bg-white dark:bg-[#2A2A3B] lg:w-[380px] xl:w-[480px] lg:min-h-screen border-t lg:border-t-0 lg:border-l border-[#E0E0E0] dark:border-[#3A3A4E]">
           <div className="w-full max-w-sm">
             <div className="mb-8">
               <h3 className="text-2xl font-bold text-[#1C1C1C] dark:text-[#EAEAEA] mb-2">Get started</h3>
