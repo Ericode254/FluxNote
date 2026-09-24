@@ -255,10 +255,12 @@ export const BlockNoteEditorWrapper = forwardRef<BlockNoteEditorWrapperHandle, B
   useEffect(() => {
     if (!editor?.prosemirrorView) return;
     const view = editor.prosemirrorView;
+    // Only needed to age cursors into "stale"/removed once the heartbeat
+    // stops updating them; skip the tick entirely when nobody else is present.
     const interval = setInterval(() => {
-      if (!view.isDestroyed) {
-        view.dispatch(view.state.tr.setMeta("presenceUpdate", true));
-      }
+      if (view.isDestroyed) return;
+      if (!presenceRef.current || presenceRef.current.length <= 1) return;
+      view.dispatch(view.state.tr.setMeta("presenceUpdate", true));
     }, 3_000);
     return () => clearInterval(interval);
   }, [editor]);
@@ -286,7 +288,7 @@ export const BlockNoteEditorWrapper = forwardRef<BlockNoteEditorWrapperHandle, B
         }
       }
 
-      const throttleMs = isLocalTyping ? 1000 : 80;
+      const throttleMs = isLocalTyping ? 150 : 80;
 
 
       if (now - lastSentTime < throttleMs) {
@@ -406,14 +408,31 @@ function RemoteCursorsOverlay({ editor }: { editor: BlockNoteEditor | null }) {
       });
     };
 
-    let rafId: number;
-    const loop = () => {
-      updateCoords();
-      rafId = requestAnimationFrame(loop);
+    // Recompute only when something that could move a cursor actually
+    // happens, instead of an always-on 60fps loop that forces a layout
+    // read (coordsAtPos) every frame even when nothing changed.
+    let rafId: number | null = null;
+    const scheduleUpdate = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        updateCoords();
+      });
     };
-    rafId = requestAnimationFrame(loop);
 
-    return () => cancelAnimationFrame(rafId);
+    scheduleUpdate();
+    view.dom.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    // Covers both local edits and remote presence/cursor transactions,
+    // since every dispatch (docChanged or metadata-only) fires this event.
+    editor._tiptapEditor.on("transaction", scheduleUpdate);
+
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      view.dom.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      editor._tiptapEditor.off("transaction", scheduleUpdate);
+    };
   }, [editor]);
 
   return (

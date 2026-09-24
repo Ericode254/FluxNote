@@ -16,7 +16,7 @@
     "@blocknote/react": "^0.47.2",
     "@convex-dev/auth": "^0.0.80",
     "@convex-dev/presence": "^0.3.0",
-    "@convex-dev/prosemirror-sync": "^0.2.3",
+    "@convex-dev/prosemirror-sync": "^0.2.6",
     "@mantine/core": "^8.3.18",
     "@mantine/hooks": "^8.3.18",
     "@tiptap/extension-code-block-lowlight": "^3.20.4",

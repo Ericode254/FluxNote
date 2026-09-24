@@ -54,27 +54,36 @@ export const list = query({
   args: { roomToken: v.string() },
   handler: async (ctx, { roomToken }) => {
     const presenceList = await presence.list(ctx, roomToken);
-    const listWithUserInfo = await Promise.all(
-      presenceList.map(async (entry) => {
-        const user = await ctx.db.get(entry.userId as Id<"users">);
-        const profile = await ctx.db
-          .query("userProfiles")
-          .withIndex("by_user_id", (q) => q.eq("userId", entry.userId))
-          .unique();
-        const displayName =
-          profile?.displayName ??
-          user?.name ??
-          user?.email ??
-          "Anonymous";
-        return {
-          ...entry,
-          name: displayName,
-          image: user?.image,
-          color: getColorForUser(entry.userId),
-        };
-      })
-    );
-    return listWithUserInfo;
+
+    const [users, profiles] = await Promise.all([
+      Promise.all(
+        presenceList.map((entry) => ctx.db.get(entry.userId as Id<"users">))
+      ),
+      Promise.all(
+        presenceList.map((entry) =>
+          ctx.db
+            .query("userProfiles")
+            .withIndex("by_user_id", (q) => q.eq("userId", entry.userId))
+            .unique()
+        )
+      ),
+    ]);
+
+    return presenceList.map((entry, i) => {
+      const user = users[i];
+      const profile = profiles[i];
+      const displayName =
+        profile?.displayName ??
+        user?.name ??
+        user?.email ??
+        "Anonymous";
+      return {
+        ...entry,
+        name: displayName,
+        image: user?.image,
+        color: getColorForUser(entry.userId),
+      };
+    });
   },
 });
 
