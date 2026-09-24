@@ -32,14 +32,14 @@ export const heartbeat = mutation({
 });
 
 const COLORS = [
-  "#FF5F5F", // Red
-  "#4F91FF", // Blue
-  "#32D74B", // Green
-  "#FF9500", // Orange
-  "#AF52DE", // Purple
-  "#FFCC00", // Yellow
-  "#5AC8FA", // Sky Blue
-  "#FF2D55", // Pink
+  "#B5502F", // Red
+  "#5C6E4E", // Blue
+  "#6B7F4F", // Green
+  "#B98A3D", // Orange
+  "#6B5B8C", // Purple
+  "#C9A24A", // Yellow
+  "#4A6670", // Sky Blue
+  "#8C6E4A", // Pink
 ];
 
 function getColorForUser(userId: string) {

@@ -7,7 +7,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Inter var", ...fontFamily.sans],
+        sans: ["Source Serif 4", ...fontFamily.serif],
+        mono: ["IBM Plex Mono", ...fontFamily.mono],
       },
       borderRadius: {
         DEFAULT: "8px",
@@ -20,34 +21,34 @@ module.exports = {
       },
       colors: {
         primary: {
-          DEFAULT: "#4F91FF",
-          hover: "#3a7de8",
+          DEFAULT: "#5C6E4E",
+          hover: "#4A5A3D",
         },
         secondary: {
-          DEFAULT: "#555555",
-          hover: "#333333",
+          DEFAULT: "#6B6455",
+          hover: "#4A4437",
         },
         accent: {
-          cyan: "#00D8FF",
-          green: "#32D74B",
-          red: "#FF5F5F",
-          orange: "#FF9500",
+          gold: "#B98A3D",
+          green: "#6B7F4F",
+          red: "#B5502F",
+          orange: "#B98A3D",
         },
         surface: {
-          light: "#F5F5F5",
+          light: "#F6F1E7",
           card: "#FFFFFF",
-          dark: "#1E1E2F",
-          "dark-card": "#2A2A3B",
+          dark: "#1A160F",
+          "dark-card": "#221D13",
         },
         border: {
-          light: "#E0E0E0",
-          dark: "#3A3A4E",
+          light: "#EAE0C8",
+          dark: "#3A3323",
         },
         text: {
-          primary: "#1C1C1C",
-          secondary: "#555555",
-          "dark-primary": "#EAEAEA",
-          "dark-secondary": "#AAAAAA",
+          primary: "#201C16",
+          secondary: "#6B6455",
+          "dark-primary": "#EDE6D3",
+          "dark-secondary": "#93876A",
         },
       },
       spacing: {

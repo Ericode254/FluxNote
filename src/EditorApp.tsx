@@ -65,11 +65,11 @@ export function EditorApp({ darkMode, onToggleDark }: EditorAppProps) {
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       {/* Top bar */}
-      <header className="h-14 flex items-center justify-between px-4 border-b border-[#E0E0E0] dark:border-[#3A3A4E] bg-white dark:bg-[#2A2A3B] shadow-sm flex-shrink-0 z-10">
+      <header className="h-14 flex items-center justify-between px-4 border-b border-[#EAE0C8] dark:border-[#3A3323] bg-[#F6F1E7] dark:bg-[#1A160F] shadow-sm flex-shrink-0 z-10">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen((o) => !o)}
-            className="p-2 rounded-lg hover:bg-[#F5F5F5] dark:hover:bg-[#3A3A4E] transition-colors"
+            className="p-2 rounded-lg hover:bg-[#F6F1E7] dark:hover:bg-[#3A3323] transition-colors"
             title="Toggle sidebar"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,14 +78,14 @@ export function EditorApp({ darkMode, onToggleDark }: EditorAppProps) {
           </button>
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="Flux Note" className="w-8 h-8 rounded-lg shadow-sm" />
-            <span className="font-bold text-lg hidden sm:block text-[#1C1C1C] dark:text-[#EAEAEA]">Flux Note</span>
+            <span className="font-bold text-lg hidden sm:block text-[#201C16] dark:text-[#EDE6D3]">Flux Note</span>
 
           </div>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={onToggleDark}
-            className="p-2 rounded-lg hover:bg-[#F5F5F5] dark:hover:bg-[#3A3A4E] transition-colors"
+            className="p-2 rounded-lg hover:bg-[#F6F1E7] dark:hover:bg-[#3A3323] transition-colors"
             title="Toggle dark mode"
           >
             {darkMode ? (
@@ -107,7 +107,7 @@ export function EditorApp({ darkMode, onToggleDark }: EditorAppProps) {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <div className={`${sidebarOpen ? "w-64" : "w-0"} flex-shrink-0 transition-all duration-200 overflow-hidden border-r border-[#E0E0E0] dark:border-[#3A3A4E]`}>
+        <div className={`${sidebarOpen ? "w-64" : "w-0"} flex-shrink-0 transition-all duration-200 overflow-hidden border-r border-[#EAE0C8] dark:border-[#3A3323]`}>
           <Sidebar
             documents={documents}
             selectedDocId={selectedDocId}
@@ -117,7 +117,7 @@ export function EditorApp({ darkMode, onToggleDark }: EditorAppProps) {
         </div>
 
         {/* Main editor area */}
-        <div className="flex-1 overflow-hidden bg-[#F5F5F5] dark:bg-[#1E1E2F]">
+        <div className="flex-1 overflow-hidden bg-[#F6F1E7] dark:bg-[#1A160F]">
           {selectedDocId ? (
             <Editor docId={selectedDocId} darkMode={darkMode} />
           ) : (
@@ -140,17 +140,17 @@ export function EditorApp({ darkMode, onToggleDark }: EditorAppProps) {
 function EmptyState({ onCreateDoc }: { onCreateDoc: () => void }) {
   return (
     <div className="h-full flex flex-col items-center justify-center gap-6 p-8">
-      <div className="w-24 h-24 rounded-2xl bg-[#4F91FF]/10 dark:bg-[#4F91FF]/20 flex items-center justify-center overflow-hidden">
+      <div className="w-24 h-24 rounded-2xl bg-[#5C6E4E]/10 dark:bg-[#5C6E4E]/20 flex items-center justify-center overflow-hidden">
         <img src="/logo.png" alt="Flux Note" className="w-16 h-16 opacity-80" />
       </div>
 
       <div className="text-center">
-        <p className="text-lg font-semibold text-[#1C1C1C] dark:text-[#EAEAEA] mb-1">No document selected</p>
-        <p className="text-sm text-[#555555] dark:text-[#AAAAAA]">Select a document from the sidebar or create a new one</p>
+        <p className="text-lg font-semibold text-[#201C16] dark:text-[#EDE6D3] mb-1">No document selected</p>
+        <p className="text-sm text-[#6B6455] dark:text-[#93876A]">Select a document from the sidebar or create a new one</p>
       </div>
       <button
         onClick={onCreateDoc}
-        className="px-5 py-2.5 bg-[#4F91FF] hover:bg-[#3a7de8] text-white rounded-lg font-medium transition-colors shadow-sm"
+        className="px-5 py-2.5 bg-[#5C6E4E] hover:bg-[#4A5A3D] text-white rounded-lg font-medium transition-colors shadow-sm"
       >
         Create a document
       </button>

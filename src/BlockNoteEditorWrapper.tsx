@@ -30,7 +30,7 @@ interface BlockNoteEditorWrapperProps {
 }
 
 const COLORS = [
-  "#FF5F5F", "#4F91FF", "#32D74B", "#FF9500", "#AF52DE", "#FFCC00", "#5AC8FA", "#FF2D55",
+  "#B5502F", "#5C6E4E", "#6B7F4F", "#B98A3D", "#6B5B8C", "#C9A24A", "#4A6670", "#8C6E4A",
 ];
 
 interface PresenceData {
@@ -360,7 +360,7 @@ export const BlockNoteEditorWrapper = forwardRef<BlockNoteEditorWrapperHandle, B
   if (sync.isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4F91FF]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5C6E4E]"></div>
       </div>
     );
   }
@@ -368,10 +368,10 @@ export const BlockNoteEditorWrapper = forwardRef<BlockNoteEditorWrapperHandle, B
   if (!sync.editor) {
     return (
       <div className="h-full flex flex-col items-center justify-center gap-4">
-        <p className="text-[#555555] dark:text-[#AAAAAA]">Document not initialized</p>
+        <p className="text-[#6B6455] dark:text-[#93876A]">Document not initialized</p>
         <button
           onClick={() => sync.create({ type: "doc", content: [] })}
-          className="px-4 py-2 bg-[#4F91FF] hover:bg-[#3a7de8] text-white rounded-lg font-medium transition-colors"
+          className="px-4 py-2 bg-[#5C6E4E] hover:bg-[#4A5A3D] text-white rounded-lg font-medium transition-colors"
         >
           Initialize Document
         </button>

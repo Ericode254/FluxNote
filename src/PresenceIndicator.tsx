@@ -29,7 +29,7 @@ function PresenceInner({ roomId, userId }: { roomId: string; userId: string }) {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-[#555555] dark:text-[#AAAAAA] hidden sm:block">
+      <span className="text-xs text-[#6B6455] dark:text-[#93876A] hidden sm:block">
         {presenceState.length} editing
       </span>
       <FacePile presenceState={sanitizedPresence} />

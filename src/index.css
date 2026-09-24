@@ -3,78 +3,74 @@
 @tailwind utilities;
 
 :root {
-  --color-light: #F5F5F5;
-  --color-dark: #1E1E2F;
-  --color-primary: #4F91FF;
-  --color-cyan: #00D8FF;
-  --color-green: #32D74B;
-  --color-red: #FF5F5F;
-  --color-orange: #FF9500;
+  --color-light: #F6F1E7;
+  --color-dark: #1A160F;
+  --color-primary: #5C6E4E;
+  --color-cyan: #B98A3D;
+  --color-green: #6B7F4F;
+  --color-red: #B5502F;
+  --color-orange: #B98A3D;
 }
 
 body {
   font-family:
-    "Inter Variable",
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    "Helvetica Neue",
-    Arial,
-    "Noto Sans",
-    sans-serif,
-    "Apple Color Emoji",
-    "Segoe UI Emoji",
-    "Segoe UI Symbol",
-    "Noto Color Emoji";
-  color: #1C1C1C;
-  background: #F5F5F5;
+    "Source Serif 4",
+    Georgia,
+    "Times New Roman",
+    serif;
+  color: #201C16;
+  background: #F6F1E7;
 }
 
 .dark body {
-  color: #EAEAEA;
-  background: #1E1E2F;
+  color: #EDE6D3;
+  background: #1A160F;
+}
+
+/* Metadata: timestamps, search, save status, invite links — the
+   typewriter counterpoint to the serif reading type. */
+.fn-mono {
+  font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
 }
 
 /* Auth input fields */
 .auth-input-field {
-  @apply w-full px-4 py-3 rounded-lg bg-white border border-[#E0E0E0] focus:border-[#4F91FF] focus:ring-1 focus:ring-[#4F91FF] outline-none transition-shadow shadow-sm hover:shadow;
+  @apply w-full px-4 py-3 rounded-lg bg-white border border-[#EAE0C8] focus:border-[#5C6E4E] focus:ring-1 focus:ring-[#5C6E4E] outline-none transition-shadow shadow-sm hover:shadow;
 }
 
 .dark .auth-input-field {
-  @apply bg-[#2A2A3B] border-[#3A3A4E] text-[#EAEAEA];
+  @apply bg-[#221D13] border-[#3A3323] text-[#EDE6D3];
 }
 
 .auth-button {
-  @apply w-full px-4 py-3 rounded bg-[#4F91FF] text-white font-semibold hover:bg-[#3a7de8] transition-colors shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply w-full px-4 py-3 rounded bg-[#5C6E4E] text-white font-semibold hover:bg-[#4A5A3D] transition-colors shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 /* BlockNote editor overrides */
 .bn-container {
   background: transparent !important;
+  --bn-font-family: inherit;
 }
 
 .dark .bn-container {
   --bn-colors-editor-background: transparent;
-  --bn-colors-editor-text: #EAEAEA;
-  --bn-colors-menu-background: #2A2A3B;
-  --bn-colors-menu-text: #EAEAEA;
-  --bn-colors-tooltip-background: #3A3A4E;
-  --bn-colors-tooltip-text: #EAEAEA;
-  --bn-colors-hovered-background: #3A3A4E;
-  --bn-colors-selected-background: #4F91FF33;
-  --bn-colors-disabled-background: #3A3A4E;
+  --bn-colors-editor-text: #EDE6D3;
+  --bn-colors-menu-background: #221D13;
+  --bn-colors-menu-text: #EDE6D3;
+  --bn-colors-tooltip-background: #3A3323;
+  --bn-colors-tooltip-text: #EDE6D3;
+  --bn-colors-hovered-background: #3A3323;
+  --bn-colors-selected-background: #5C6E4E33;
+  --bn-colors-disabled-background: #3A3323;
   --bn-colors-shadow: rgba(0,0,0,0.4);
-  --bn-colors-border: #3A3A4E;
-  --bn-colors-side-menu: #AAAAAA;
-  --bn-font-family: inherit;
+  --bn-colors-border: #3A3323;
+  --bn-colors-side-menu: #93876A;
 }
 
 .bn-editor {
   padding: 2rem 3rem !important;
   min-height: 100%;
+  background: transparent !important;
 }
 
 @media (max-width: 640px) {
@@ -147,12 +143,12 @@ body {
 @keyframes text-fade-in {
   0% {
     opacity: 0.3;
-    background-color: rgba(79, 145, 255, 0.15);
+    background-color: rgba(92, 110, 78, 0.15);
     transform: scale(0.98);
   }
   20% {
     opacity: 1;
-    background-color: rgba(79, 145, 255, 0.25);
+    background-color: rgba(92, 110, 78, 0.25);
     transform: scale(1.02);
   }
   100% {
@@ -171,11 +167,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #E0E0E0;
+  background: #EAE0C8;
   border-radius: 3px;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: #3A3A4E;
+  background: #3A3323;
 }
 
 /* Stale cursor — user inactive for 5+ seconds */
@@ -202,12 +198,12 @@ body {
 @keyframes text-fade-in {
   0% {
     opacity: 0.3;
-    background-color: rgba(79, 145, 255, 0.15);
+    background-color: rgba(92, 110, 78, 0.15);
     transform: scale(0.98);
   }
   20% {
     opacity: 1;
-    background-color: rgba(79, 145, 255, 0.25);
+    background-color: rgba(92, 110, 78, 0.25);
     transform: scale(1.02);
   }
   100% {
@@ -226,24 +222,24 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #E0E0E0;
+  background: #EAE0C8;
   border-radius: 3px;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: #3A3A4E;
+  background: #3A3323;
 }
 
 /* ── Code block highlighting ────────────────────────────────────────── */
 .hljs-comment,
 .hljs-quote {
-  color: #707070;
+  color: #7A7259;
   font-style: italic;
 }
 
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-addition {
-  color: #af52de;
+  color: #6b5b8c;
   font-weight: 600;
 }
 
@@ -252,20 +248,20 @@ body {
 .hljs-meta ,
 .hljs-symbol,
 .hljs-bullet {
-  color: #32D74B;
+  color: #6B7F4F;
 }
 
 .hljs-title,
 .hljs-section,
 .hljs-params {
-  color: #4F91FF;
+  color: #5C6E4E;
 }
 
 .hljs-regexp,
 .hljs-link,
 .hljs-selector-id,
 .hljs-selector-class {
-  color: #FF5F5F;
+  color: #B5502F;
 }
 
 .hljs-variable,
@@ -273,14 +269,14 @@ body {
 .hljs-attribute,
 .hljs-tag,
 .hljs-name {
-  color: #FF9500;
+  color: #B98A3D;
 }
 
 .hljs-built_in,
 .hljs-builtin-name,
 .hljs-literal,
 .hljs-type {
-  color: #FFCC00;
+  color: #C9A24A;
 }
 
 .hljs-emphasis {
@@ -294,25 +290,25 @@ body {
 /* Dark mode overrides for syntax highlighting */
 .dark .hljs-comment,
 .dark .hljs-quote {
-  color: #808080;
+  color: #8C8368;
 }
 
 .dark .hljs-keyword,
 .dark .hljs-selector-tag,
 .dark .hljs-addition {
-  color: #D6A6FF;
+  color: #B8A0D9;
 }
 
 .dark .hljs-number,
 .dark .hljs-string,
 .dark .hljs-symbol,
 .dark .hljs-bullet {
-  color: #8AFF9F;
+  color: #9CB380;
 }
 
 .dark .hljs-title,
 .dark .hljs-section {
-  color: #7BB0FF;
+  color: #C9A24A;
 }
 
 .dark .hljs-variable,
@@ -320,12 +316,12 @@ body {
 .dark .hljs-attribute,
 .dark .hljs-tag,
 .dark .hljs-name {
-  color: #FFB340;
+  color: #D9A05B;
 }
 
 .dark .hljs-built_in,
 .dark .hljs-builtin-name,
 .dark .hljs-literal,
 .dark .hljs-type {
-  color: #FFEA7F;
+  color: #E0C878;
 }

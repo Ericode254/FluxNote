@@ -59,11 +59,11 @@ export function Sidebar({ documents, selectedDocId, onSelectDoc, onCreateDoc }: 
   const hasAnyDocs = documents.owned.length > 0 || documents.shared.length > 0;
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-[#2A2A3B]">
-      <div className="p-3 border-b border-[#E0E0E0] dark:border-[#3A3A4E] space-y-2">
+    <div className="h-full flex flex-col bg-[#F6F1E7] dark:bg-[#1A160F]">
+      <div className="p-3 border-b border-[#EAE0C8] dark:border-[#3A3323] space-y-2">
         <button
           onClick={onCreateDoc}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#4F91FF] hover:bg-[#3a7de8] text-white rounded-lg text-sm font-medium transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#5C6E4E] hover:bg-[#4A5A3D] text-white rounded-lg text-sm font-medium transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -72,14 +72,14 @@ export function Sidebar({ documents, selectedDocId, onSelectDoc, onCreateDoc }: 
         </button>
         {hasAnyDocs && (
           <div className="relative">
-            <svg className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#555555]/50 dark:text-[#AAAAAA]/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#6B6455]/50 dark:text-[#93876A]/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search documents…"
-              className="w-full pl-8 pr-3 py-1.5 rounded-lg text-sm bg-[#F5F5F5] dark:bg-[#1E1E2F] border border-transparent focus:border-[#4F91FF] outline-none transition-colors text-[#1C1C1C] dark:text-[#EAEAEA] placeholder:text-[#555555]/50 dark:placeholder:text-[#AAAAAA]/50"
+              className="font-mono w-full pl-8 pr-3 py-1.5 rounded-lg text-sm bg-[#F6F1E7] dark:bg-[#1A160F] border border-transparent focus:border-[#5C6E4E] outline-none transition-colors text-[#201C16] dark:text-[#EDE6D3] placeholder:text-[#6B6455]/50 dark:placeholder:text-[#93876A]/50"
             />
           </div>
         )}
@@ -88,7 +88,7 @@ export function Sidebar({ documents, selectedDocId, onSelectDoc, onCreateDoc }: 
       <div className="flex-1 overflow-y-auto p-2 space-y-6">
         {/* Owned Documents */}
         <div>
-          <h3 className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#555555] dark:text-[#AAAAAA] mb-2">
+          <h3 className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#6B6455] dark:text-[#93876A] mb-2">
             My Documents
           </h3>
           {documents.owned.length === 0 ? (
@@ -99,7 +99,7 @@ export function Sidebar({ documents, selectedDocId, onSelectDoc, onCreateDoc }: 
               onAction={onCreateDoc}
             />
           ) : filteredOwned.length === 0 ? (
-            <p className="px-3 text-xs text-[#555555] dark:text-[#AAAAAA]">No documents match “{search}”</p>
+            <p className="px-3 text-xs text-[#6B6455] dark:text-[#93876A]">No documents match “{search}”</p>
           ) : (
             <ul className="space-y-0.5">
               {filteredOwned.map((doc) => (
@@ -118,7 +118,7 @@ export function Sidebar({ documents, selectedDocId, onSelectDoc, onCreateDoc }: 
 
         {/* Shared Documents */}
         <div>
-          <h3 className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#555555] dark:text-[#AAAAAA] mb-2">
+          <h3 className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#6B6455] dark:text-[#93876A] mb-2">
             Shared with Me
           </h3>
           {documents.shared.length === 0 ? (
@@ -127,7 +127,7 @@ export function Sidebar({ documents, selectedDocId, onSelectDoc, onCreateDoc }: 
               hint="Documents others invite you to will show up here."
             />
           ) : filteredShared.length === 0 ? (
-            <p className="px-3 text-xs text-[#555555] dark:text-[#AAAAAA]">No documents match “{search}”</p>
+            <p className="px-3 text-xs text-[#6B6455] dark:text-[#93876A]">No documents match “{search}”</p>
           ) : (
             <ul className="space-y-0.5">
               {filteredShared.map((doc) => (
@@ -162,12 +162,12 @@ function EmptyDocs({
 }) {
   return (
     <div className="px-3 py-4 text-center">
-      <p className="text-sm font-medium text-[#1C1C1C] dark:text-[#EAEAEA] mb-1">{message}</p>
-      <p className="text-xs text-[#555555] dark:text-[#AAAAAA] mb-3">{hint}</p>
+      <p className="text-sm font-medium text-[#201C16] dark:text-[#EDE6D3] mb-1">{message}</p>
+      <p className="text-xs text-[#6B6455] dark:text-[#93876A] mb-3">{hint}</p>
       {actionLabel && onAction && (
         <button
           onClick={onAction}
-          className="text-xs font-medium px-3 py-1.5 rounded-lg bg-[#4F91FF]/10 hover:bg-[#4F91FF]/20 text-[#4F91FF] transition-colors"
+          className="text-xs font-medium px-3 py-1.5 rounded-lg bg-[#5C6E4E]/10 hover:bg-[#5C6E4E]/20 text-[#5C6E4E] transition-colors"
         >
           {actionLabel}
         </button>
@@ -205,8 +205,8 @@ function DocumentItem({
         }}
         className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors group cursor-pointer ${
           isSelected
-            ? "bg-[#4F91FF]/10 dark:bg-[#4F91FF]/20 text-[#4F91FF]"
-            : "hover:bg-[#F5F5F5] dark:hover:bg-[#3A3A4E] text-[#1C1C1C] dark:text-[#EAEAEA]"
+            ? "bg-[#5C6E4E]/10 dark:bg-[#5C6E4E]/20 text-[#5C6E4E]"
+            : "hover:bg-[#F6F1E7] dark:hover:bg-[#3A3323] text-[#201C16] dark:text-[#EDE6D3]"
         }`}
       >
         <div className="flex items-center justify-between gap-2">
@@ -223,7 +223,7 @@ function DocumentItem({
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
             {relativeTime && (
-              <span className={`text-[11px] whitespace-nowrap ${isSelected ? "text-[#4F91FF]/70" : "text-[#555555]/60 dark:text-[#AAAAAA]/60"}`}>
+              <span className={`font-mono text-[11px] whitespace-nowrap ${isSelected ? "text-[#5C6E4E]/70" : "text-[#6B6455]/60 dark:text-[#93876A]/60"}`}>
                 {relativeTime}
               </span>
             )}
@@ -231,7 +231,7 @@ function DocumentItem({
               <button
                 onClick={onDelete}
                 disabled={deletingId === doc._id}
-                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-[#FF5F5F]/10 hover:text-[#FF5F5F] transition-all"
+                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-[#B5502F]/10 hover:text-[#B5502F] transition-all"
                 title="Delete document"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -242,7 +242,7 @@ function DocumentItem({
           </div>
         </div>
         {doc.snippet && (
-          <p className={`mt-0.5 ml-6 text-xs truncate ${isSelected ? "text-[#4F91FF]/70" : "text-[#555555]/70 dark:text-[#AAAAAA]/70"}`}>
+          <p className={`mt-0.5 ml-6 text-xs truncate ${isSelected ? "text-[#5C6E4E]/70" : "text-[#6B6455]/70 dark:text-[#93876A]/70"}`}>
             {doc.snippet}
           </p>
         )}

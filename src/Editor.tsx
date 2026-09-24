@@ -61,14 +61,14 @@ export function Editor({ docId, darkMode }: EditorProps) {
   if (doc === undefined) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4F91FF]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5C6E4E]"></div>
       </div>
     );
   }
 
   if (doc === null) {
     return (
-      <div className="h-full flex items-center justify-center text-[#555555] dark:text-[#AAAAAA]">
+      <div className="h-full flex items-center justify-center text-[#6B6455] dark:text-[#93876A]">
         Document not found
       </div>
     );
@@ -77,9 +77,9 @@ export function Editor({ docId, darkMode }: EditorProps) {
   const displayName = myProfile?.displayName ?? "Anonymous";
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-[#2A2A3B]">
+    <div className="h-full flex flex-col bg-[#F6F1E7] dark:bg-[#1A160F]">
       {/* Document header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#E0E0E0] dark:border-[#3A3A4E] bg-white dark:bg-[#2A2A3B] flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#EAE0C8] dark:border-[#3A3323] bg-[#F6F1E7] dark:bg-[#1A160F] flex-shrink-0">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           {editingTitle ? (
             <input
@@ -94,12 +94,12 @@ export function Editor({ docId, darkMode }: EditorProps) {
                   setEditingTitle(false);
                 }
               }}
-              className="text-lg font-semibold bg-transparent border-b-2 border-[#4F91FF] outline-none flex-1 min-w-0 text-[#1C1C1C] dark:text-[#EAEAEA]"
+              className="text-lg font-semibold bg-transparent border-b-2 border-[#5C6E4E] outline-none flex-1 min-w-0 text-[#201C16] dark:text-[#EDE6D3]"
             />
           ) : (
             <button
               onClick={() => setEditingTitle(true)}
-              className="text-lg font-semibold text-[#1C1C1C] dark:text-[#EAEAEA] hover:text-[#4F91FF] dark:hover:text-[#4F91FF] transition-colors truncate text-left"
+              className="text-lg font-semibold text-[#201C16] dark:text-[#EDE6D3] hover:text-[#5C6E4E] dark:hover:text-[#5C6E4E] transition-colors truncate text-left"
               title="Click to rename"
             >
               {localTitle || "Untitled"}
@@ -114,7 +114,7 @@ export function Editor({ docId, darkMode }: EditorProps) {
           {/* Download */}
           <button
             onClick={() => editorRef.current?.downloadMarkdown(localTitle)}
-            className="p-2 rounded-lg hover:bg-[#F5F5F5] dark:hover:bg-[#3A3A4E] text-[#555555] dark:text-[#AAAAAA] transition-colors"
+            className="p-2 rounded-lg hover:bg-[#F6F1E7] dark:hover:bg-[#3A3323] text-[#6B6455] dark:text-[#93876A] transition-colors"
             title="Download as Markdown"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,10 +164,10 @@ export function Editor({ docId, darkMode }: EditorProps) {
 function SyncStatusBadge({ status }: { status: SyncStatus }) {
   return (
     <span
-      className={`hidden sm:flex items-center gap-1.5 text-xs flex-shrink-0 transition-colors ${
+      className={`font-mono hidden sm:flex items-center gap-1.5 text-xs flex-shrink-0 transition-colors ${
         status === "saving"
-          ? "text-[#555555] dark:text-[#AAAAAA]"
-          : "text-[#32D74B]"
+          ? "text-[#6B6455] dark:text-[#93876A]"
+          : "text-[#6B7F4F]"
       }`}
     >
       {status === "saving" ? (

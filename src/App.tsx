@@ -23,7 +23,7 @@ export default function App() {
 
   return (
     <div className={darkMode ? "dark" : ""}>
-      <div className="min-h-screen bg-[#F5F5F5] dark:bg-[#1E1E2F] text-[#1C1C1C] dark:text-[#EAEAEA] transition-colors">
+      <div className="min-h-screen bg-[#F6F1E7] dark:bg-[#1A160F] text-[#201C16] dark:text-[#EDE6D3] transition-colors">
         <Authenticated>
           <EditorApp darkMode={darkMode} onToggleDark={() => setDarkMode((d) => !d)} />
         </Authenticated>
